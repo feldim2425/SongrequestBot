@@ -1,15 +1,15 @@
-# 🚀 Welcome to your new awesome project!
+# Songrequest Bot [WIP]
 
-This project has been created using **webpack scaffold**, you can now run
+This project is inspired by [TrojanerHDs Songrequest Bot](https://github.com/TrojanerHD/Songrequestbot).
 
+Different from the original this bot has a seperate nodejs backend and a browser frontend. This way the bot can run on a seprate computer/server (better for streaming).
+
+The whole project is made in Typescript and the frontend uses the Vue framework.
+
+## Build instructions
 ```
-npm run build
+$ yarn
+$ yarn run build
+$ yarn run start
 ```
-
-or
-
-```
-yarn build
-```
-
-to bundle your application
+You can build and run the project but it is still Work In Progress
