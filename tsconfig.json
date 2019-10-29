@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "lib": ["dom", "es5", "es2016"],
+        "target": "es6",
+        "module": "commonjs",
+        "sourceMap": true,
+        "noImplicitThis": true,
+        "noEmitHelpers": true,
+        "importHelpers": true,
+        "moduleResolution": "node",
+        "baseUrl": ".",
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,      
+        "allowJs": true
+    },
+    "include": [
+        "./src/**/*"
+    ]
+}
