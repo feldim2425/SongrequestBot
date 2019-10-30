@@ -1,3 +1,4 @@
+import _ from 'lodash'
 
 export enum Source {
     YOUTUBE = "yt",
@@ -11,17 +12,34 @@ const SOURCE_NAMES = {
     [Source.SOUNDCLOUD]: 'Soundcloud'
 }
 
+export function songFromCmdObject(obj:any) : Song | undefined{
+    return undefined //TODO: implement songFromCmdObject
+}
+
+export function songsFromCmdObjects(objs:any[]) : Song[]{
+    let songs: Song[] = []
+    for(const obj of objs){
+        let song = songFromCmdObject(obj)
+        if(!_.isNil(song)){
+            songs.push(song)
+        }
+    }
+    return songs
+}
+
 export default class Song {
     private _source: Source
     private _url: string
     private _name: string
     private _requester: string
+    private _uuid: string
 
-    constructor(source: Source, url: string, name: string, requester: string){
+    constructor(source: Source, url: string, name: string, requester: string, uuid: string){
         this._name = name
         this._source = source
         this._url = url
         this._requester = requester
+        this._uuid = uuid
     }
 
     public get source() : Source{
@@ -42,5 +60,9 @@ export default class Song {
 
     public get requester() : string {
         return this._requester
+    }
+
+    public get uuid() : string {
+        return this._uuid
     }
 }

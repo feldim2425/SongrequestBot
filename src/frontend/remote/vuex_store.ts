@@ -1,6 +1,7 @@
-import Vuex, {ActionContext} from "vuex";
-import Vue from "vue";
-import Song, { Source } from './song';
+import Vuex, {ActionContext, Store} from "vuex"
+import Vue from "vue"
+import Song, { Source } from './song'
+import uuidv4 from 'uuid/v4'
 
 Vue.use(Vuex);
 
@@ -10,14 +11,14 @@ export type State = {
 
 const store = new Vuex.Store<State>({
     state: {
-        songlist: [new Song(Source.YOUTUBE, '', 'Noisestorm - Crab Rave [Monstercat Release]', 'trojaner'), 
-        new Song(Source.SPOTIFY, '', 'Different Seas', 'feldim2425')]
+        songlist: [new Song(Source.YOUTUBE, '', 'Noisestorm - Crab Rave [Monstercat Release]', 'trojaner', uuidv4()), 
+        new Song(Source.SPOTIFY, '', 'Different Seas', 'feldim2425', uuidv4())]
     },
     actions: {
-        addSong(context: ActionContext<State,State>, song: Song){
-            context.commit('addSong', song)
+        addSongs(context: ActionContext<State,State>, song: Song[]){
+            context.commit('addSongs', song)
         },
-        removeSong(context: ActionContext<State,State>, song: Song){
+        removeSongs(context: ActionContext<State,State>, song: Song){
             context.commit('removeSong', song)
         },
     },
@@ -26,4 +27,5 @@ const store = new Vuex.Store<State>({
     modules: {},
 })
 
+export type VuexStoreType = Store<State>
 export default store
