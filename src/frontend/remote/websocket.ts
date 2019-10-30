@@ -34,6 +34,32 @@ export default class BackendConnection extends EventEmitter {
             this._socket.onopen = () => this.emit('connected')
             this._socket.onclose = () => this.emit('closed')
             this._socket.onerror = (event)  => this.emit('error', event)
+            this._socket.onmessage = (message) => this._parseMessage(message)
+        }
+    }
+    
+    private _parseMessage(message: MessageEvent): void {
+        if(!_.isString(message.data)){
+            return
+        }
+        let command : string = undefined
+        let args : any[] = []
+        try{
+            message = JSON.parse(message.data)
+            if(!_.isObject(message) || !message.hasOwnProperty('command') || !_.isString(message['command'])){
+                return
+            }
+
+            if(!message.hasOwnProperty('args') || !_.isArray(message['args'])){
+                args = message['args']
+            }
+        } 
+        catch(e){
+            // Nothing ... In case of an error the message was probably wrong
+        }
+
+        if(!_.isNil(command)){
+            this.emit('command', command, args)
         }
     }
 

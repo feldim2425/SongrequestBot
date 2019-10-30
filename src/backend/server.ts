@@ -7,12 +7,11 @@ import {Server as httpServer} from 'http'
 import {StateException} from './utils/errors'
 import ws from 'ws'
 
+
+
+
 function _redirectDashboard(req: express.Request|undefined, res: express.Response) : void{
     res.redirect('/dashboard')
-}
-
-function _backendHandler(ws: ws, req: express.Request, next: express.NextFunction) : void {
-    next()
 }
 
 
@@ -21,6 +20,9 @@ const FILE_MAPPINGS : {[key:string]: string} = {
     '/frontend.js': 'frontend.js'
 }
 
+/**
+ * Handles the express server and the connected clients
+ */
 export default class Server extends EventEmitter{
 
     private _expApp: express.Application | expressWs.Application
@@ -28,6 +30,7 @@ export default class Server extends EventEmitter{
     private _resourcePath: string
     private _server?: httpServer
     private _open: boolean = false
+    
 
 
     constructor(resourcePath: string){
@@ -39,7 +42,7 @@ export default class Server extends EventEmitter{
         for(const [route, file] of Object.entries(FILE_MAPPINGS)){
             this._expApp.get(route, (req: express.Request, res: express.Response) => res.sendFile(path.join(this._resourcePath, file)))
         }
-        (<expressWs.Application> this._expApp).ws('/socket',_backendHandler)
+        (<expressWs.Application> this._expApp).ws('/socket', (ws, req) => this.emit('client-connected', ws, req))
 
         this._expApp.use(_redirectDashboard);
     }
@@ -48,6 +51,7 @@ export default class Server extends EventEmitter{
         if(this.serverOpen){
             throw new StateException('Server already open')
         }
+        this.emit('starting')
 
         if(_.isNil(this._server)) {
             this._server = this._expApp.listen(port)
@@ -62,7 +66,11 @@ export default class Server extends EventEmitter{
 
     public stopServer() : void{
         if(this.serverOpen) {
-            this._server.close(() => {this._open = false})
+            this.emit('stopping')
+            this._server.close(() => {
+                this._open = false
+                this.emit('stopped')
+            })
         }
     }
 

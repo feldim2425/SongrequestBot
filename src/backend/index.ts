@@ -1,9 +1,11 @@
 import process from 'process'
 
 import Server from './server'
+import { ClientManager } from './clients'
 
 const server = new Server(__dirname)
 console.log(`Server resources: ${server.resources}`)
+const clientHandler = new ClientManager(server);
 server.startServer();
 
 function onExit(){
