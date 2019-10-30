@@ -5,10 +5,14 @@ import path from 'path'
 import * as _ from 'lodash'
 import {Server as httpServer} from 'http'
 import {StateException} from './utils/errors'
-import { kMaxLength } from 'buffer'
+import ws from 'ws'
 
 function _redirectDashboard(req: express.Request|undefined, res: express.Response) : void{
     res.redirect('/dashboard')
+}
+
+function _backendHandler(ws: ws, req: express.Request, next: express.NextFunction) : void {
+    next()
 }
 
 
@@ -19,7 +23,7 @@ const FILE_MAPPINGS : {[key:string]: string} = {
 
 export default class Server extends EventEmitter{
 
-    private _expApp: express.Application
+    private _expApp: express.Application | expressWs.Application
     private _expWs: expressWs.Instance
     private _resourcePath: string
     private _server?: httpServer
@@ -35,6 +39,7 @@ export default class Server extends EventEmitter{
         for(const [route, file] of Object.entries(FILE_MAPPINGS)){
             this._expApp.get(route, (req: express.Request, res: express.Response) => res.sendFile(path.join(this._resourcePath, file)))
         }
+        (<expressWs.Application> this._expApp).ws('/socket',_backendHandler)
 
         this._expApp.use(_redirectDashboard);
     }
