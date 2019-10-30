@@ -75,13 +75,13 @@ export class ClientManager extends EventEmitter {
         let command : string = undefined
         let args : any[] = []
         try{
-            message = JSON.parse(message.data)
-            if(!_.isObject(message) || !message.hasOwnProperty('command') || !_.isString(message['command'])){
+            let msgObj = JSON.parse(message.data)
+            if(!_.isObject(msgObj) || !msgObj.hasOwnProperty('command') || !_.isString(msgObj['command'])){
                 return
             }
-
-            if(!message.hasOwnProperty('args') || !_.isArray(message['args'])){
-                args = message['args']
+            command = msgObj['command']
+            if(msgObj.hasOwnProperty('args') && _.isArray(msgObj['args'])){
+                args = msgObj['args']
             }
         } 
         catch(e){
@@ -90,6 +90,13 @@ export class ClientManager extends EventEmitter {
 
         if(!_.isNil(command)){
             this.emit('command', command, args)
+        }
+    }
+
+    public sendCommand(command: string, ...args:any[]){
+        let msg = JSON.stringify({command, args})
+        for(let con of this._frontend_cons){
+            con.socket.send(msg)
         }
     }
 }
