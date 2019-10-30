@@ -5,6 +5,7 @@ import App from './app.vue'
 import Settings from './screens/settings.vue'
 import store from './remote/vuex_store'
 import BackendConnection from './remote/websocket'
+import attatchHandler from './remote/remote_commands'
 
 Vue.use(BootstrapVue)
 
@@ -19,6 +20,7 @@ connection.on('closed', (event) => {
 connection.on('error', (event) => {
     console.error(event)
 })
+attatchHandler(connection)
 
 const vueApp = new Vue({
     store,
