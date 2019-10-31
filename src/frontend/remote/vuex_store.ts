@@ -12,8 +12,7 @@ export type State = {
 
 const store = new Vuex.Store<State>({
     state: {
-        songlist: [new Song(Source.YOUTUBE, '', 'Noisestorm - Crab Rave [Monstercat Release]', 'trojaner', uuidv4()), 
-        new Song(Source.SPOTIFY, '', 'Different Seas', 'feldim2425', uuidv4())]
+        songlist: []
     },
     actions: {
         addSongs(context: ActionContext<State,State>, songs: Song[]){

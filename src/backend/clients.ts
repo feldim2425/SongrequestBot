@@ -33,6 +33,11 @@ export class FrontendConnection extends EventEmitter{
         this._ws.close(code, reason)
     }
 
+    public sendCommand(command: string, ...args:any[]){
+        let msg = JSON.stringify({command, args})
+        this._ws.send(msg)
+    }
+
     public get socket() :ws{
         return this._ws
     }
@@ -60,7 +65,7 @@ export class ClientManager extends EventEmitter {
         })
         console.info('Client connected')
 
-        this.sendCommand('syncsongs', {name: 'test', source: 'yt', uuid: 'id', requester:'me', url: 'google.com'}) //TODO: This is just a test remove later
+        this.emit('new_client', con)
     }
 
     public closeAll(): void {
@@ -93,6 +98,10 @@ export class ClientManager extends EventEmitter {
         if(!_.isNil(command)){
             this.emit('command', command, args)
         }
+    }
+
+    get clients(): FrontendConnection[]{
+        return [...this._frontend_cons]
     }
 
     public sendCommand(command: string, ...args:any[]){

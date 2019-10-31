@@ -10,7 +10,8 @@ export enum Source {
 const SOURCE_NAMES = {
     [Source.YOUTUBE]: 'Youtube',
     [Source.SPOTIFY]: 'Spotify',
-    [Source.SOUNDCLOUD]: 'Soundcloud'
+    [Source.SOUNDCLOUD]: 'Soundcloud',
+    'unknown': '< Unknown Source >'
 }
 
 export function songFromCmdObject(obj:any) : Song | undefined{
@@ -71,7 +72,10 @@ export default class Song {
     }
 
     public get source_readable() : string{
-        return SOURCE_NAMES[this.source];
+        if(this.source in SOURCE_NAMES){
+            return SOURCE_NAMES[this.source];
+        }
+        return SOURCE_NAMES['unknown']
     }
 
     public get url() : string {
