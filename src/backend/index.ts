@@ -1,7 +1,7 @@
 import process from 'process'
 
-import Server from './server'
-import { ClientManager } from './clients'
+import Server from './connection/server'
+import { ClientManager } from './connection/clients'
 
 const server = new Server(__dirname)
 console.log(`Server resources: ${server.resources}`)

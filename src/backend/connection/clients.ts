@@ -8,7 +8,6 @@ import _ from 'lodash'
  * Like login, sessions, per client settings or this kind of stuff
  */
 export class FrontendConnection extends EventEmitter{
-
     private _ws: ws
 
     constructor(ws :ws){
@@ -21,38 +20,54 @@ export class FrontendConnection extends EventEmitter{
 
     private _handle_close(code:number, reason:string) :void{
         console.info(`Client disconnected: <${code}> "${reason}"`)
-        this.emit('close', this, code, reason)
+        this.emit('close', code, reason)
     }
 
     private _handle_error(err:Error) :void{
         console.error('Websocket error',err)
-        this.emit('error', this, err)
+        this.emit('error', err)
     }
 
+    /**
+     * Close the client connection
+     * 
+     * @param {number} code Websocket disconnect code (default: 1000)
+     * @param {string} reason Disconnect reason (default: '')
+     */
     public close(code?:number, reason?:string){
         this._ws.close(code, reason)
     }
 
+    /**
+     * Sends a command to the client
+     * @param command Command to execute
+     * @param args Arguments
+     */
     public sendCommand(command: string, ...args:any[]){
         let msg = JSON.stringify({command, args})
         this._ws.send(msg)
     }
 
+    /**
+     * @return The websocket instance
+     */
     public get socket() :ws{
         return this._ws
     }
 }
 
-
+/**
+ * Manages all client connections (connecting, errors, messages and disconnects)
+ * and relays messages to the clients
+ */
 export class ClientManager extends EventEmitter {
-
     private _server:Server
     private _frontend_cons: FrontendConnection[] = []
 
     constructor(server: Server){
         super()
         this._server = server
-        this._server.on('client-connected', (ws) => this._connect_ws(ws))
+        this._server.on('client_connected', (ws) => this._connect_ws(ws))
         this._server.on('stopping', () => this.closeAll())
     }
 
@@ -66,13 +81,6 @@ export class ClientManager extends EventEmitter {
         console.info('Client connected')
 
         this.emit('new_client', con)
-    }
-
-    public closeAll(): void {
-        for(const con of this._frontend_cons){
-            con.close()
-        }
-        this._frontend_cons = []
     }
 
     private _parseMessage(message: MessageEvent): void {
@@ -100,11 +108,29 @@ export class ClientManager extends EventEmitter {
         }
     }
 
+    /**
+     * Closes all connections
+     */
+    public closeAll(): void {
+        for(const con of this._frontend_cons){
+            con.close(1000, 'closed')
+        }
+        this._frontend_cons = []
+    }
+
+    /**
+     * @returns a list of all clients
+     */
     get clients(): FrontendConnection[]{
         return [...this._frontend_cons]
     }
 
-    public sendCommand(command: string, ...args:any[]){
+    /**
+     * Sends a command to all clients
+     * @param command Command to execute
+     * @param args Arguments
+     */
+    public sendCommand(command: string, ...args:any[]) : void{
         let msg = JSON.stringify({command, args})
         for(let con of this._frontend_cons){
             con.socket.send(msg)
