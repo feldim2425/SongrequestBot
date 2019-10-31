@@ -1,7 +1,7 @@
 <template>
     <nav class='navigation'>
         <ul>
-                <li><b-button>Open Settings</b-button></li>
+                <li><b-button pill @click="$emit('settings-open')">Open Settings</b-button></li>
         </ul>
     </nav>
 </template>
