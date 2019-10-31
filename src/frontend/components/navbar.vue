@@ -1,7 +1,7 @@
 <template>
     <nav class='navigation'>
         <ul>
-            <li><b-button>Open Settings</b-button></li>
+                <li><b-button>Open Settings</b-button></li>
         </ul>
     </nav>
 </template>
@@ -22,21 +22,23 @@ export default class NavBar extends Vue{
     @import '../style/utils';
 
     .navigation {
-        @include linear-gradient(to bottom, rgba(102,102,102,1) 0%, rgba(61,60,61,1) 50%, rgba(107,107,107,1) 100%);
+        @include linear-gradient(to bottom, #273950 0%, #0c1015 50%, #273950 100%);
         height: 50px;
-        padding: 0;
+        margin: 0;
+        position: relative;
 
         ul {
             list-style-type: none;
-            margin: 0;
-            padding: 0;
+            padding: 1em;
+            margin: auto;
             overflow: hidden;
-            height: 100%;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
         }
 
         li {
             float: left;
-            height: 100%;
             a {
                 padding: 1em 1em;
                 display: block;
