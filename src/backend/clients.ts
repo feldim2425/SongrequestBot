@@ -59,6 +59,8 @@ export class ClientManager extends EventEmitter {
             _.remove(this._frontend_cons, (listCon) => listCon === con)
         })
         console.info('Client connected')
+
+        this.sendCommand('syncsongs', {name: 'test', source: 'yt', uuid: 'id', requester:'me', url: 'google.com'}) //TODO: This is just a test remove later
     }
 
     public closeAll(): void {

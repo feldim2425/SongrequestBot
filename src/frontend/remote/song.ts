@@ -1,9 +1,10 @@
 import _ from 'lodash'
+import mapArguments, { ArgMapOptions } from '../utils/argarray'
 
 export enum Source {
-    YOUTUBE = "yt",
-    SPOTIFY = "spotify",
-    SOUNDCLOUD = "soundcloud"
+    YOUTUBE = 'yt',
+    SPOTIFY = 'spotify',
+    SOUNDCLOUD = 'soundcloud'
 }
 
 const SOURCE_NAMES = {
@@ -13,7 +14,30 @@ const SOURCE_NAMES = {
 }
 
 export function songFromCmdObject(obj:any) : Song | undefined{
-    return undefined //TODO: implement songFromCmdObject
+    const SONG_OBJ_ATTRS : ArgMapOptions[] = [
+        {key: 'source', checkFunction: _.isString},
+        {key: 'url', checkFunction: _.isString},
+        {key: 'name', checkFunction: _.isString},
+        {key: 'requester', checkFunction: _.isString},
+        {key: 'uuid', checkFunction: _.isString}
+    ]
+
+    if(!_.isObject(obj)){
+        return undefined
+    }
+
+    let map = mapArguments(SONG_OBJ_ATTRS, obj)
+    if(_.isString(map)){
+        console.error(map)
+        return undefined
+    }
+
+    if(map.length < 5 || !Object.values(Source).includes(map[0])){
+        console.error('Malformed song arguments')
+        return undefined
+    }
+
+    return new Song(map[0], map[1], map[2], map[3], map[4])
 }
 
 export function songsFromCmdObjects(objs:any[]) : Song[]{

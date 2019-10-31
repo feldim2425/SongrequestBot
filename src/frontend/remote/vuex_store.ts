@@ -2,6 +2,7 @@ import Vuex, {ActionContext, Store} from "vuex"
 import Vue from "vue"
 import Song, { Source } from './song'
 import uuidv4 from 'uuid/v4'
+import _ from 'lodash';
 
 Vue.use(Vuex);
 
@@ -15,14 +16,24 @@ const store = new Vuex.Store<State>({
         new Song(Source.SPOTIFY, '', 'Different Seas', 'feldim2425', uuidv4())]
     },
     actions: {
-        addSongs(context: ActionContext<State,State>, song: Song[]){
-            context.commit('addSongs', song)
+        addSongs(context: ActionContext<State,State>, songs: Song[]){
+            context.commit('addSongs', songs)
         },
-        removeSongs(context: ActionContext<State,State>, song: Song){
-            context.commit('removeSong', song)
+
+        setSongs(context: ActionContext<State,State>, songs: Song[]){
+            if(!_.isEqual(context.state.songlist,songs)){
+                context.commit('setSongs', songs)
+            }
+        },
+        removeSongs(context: ActionContext<State,State>, songs: Song){
+            context.commit('removeSong', songs)
         },
     },
-    mutations: {},
+    mutations: {
+        setSongs(state:State, songs: Song[]): void{
+            state.songlist = songs
+        }
+    },
     getters: {},
     modules: {},
 })
