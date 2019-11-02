@@ -74,6 +74,10 @@ module.exports = function(env, argv) {
                     exclude: [/node_modules/]
                 },
                 {
+                    test: /\.json5$/,
+                    loader: 'json5-loader'
+                },
+                {
                     test: /\.css$/,
                     loader: ['vue-style-loader', 'css-loader'],
                 },
@@ -110,7 +114,7 @@ module.exports = function(env, argv) {
             }
         },
         resolve: {
-            extensions: ['.js', '.ts', '.json', '.scss', '.css', '.vue'],
+            extensions: ['.js', '.ts', '.json5', '.json', '.scss', '.css', '.vue'],
             alias: {
                 vue: 'vue/dist/vue.js'
             }
@@ -154,6 +158,10 @@ module.exports = function(env, argv) {
                     test: /\.js$/,
                     loader: 'babel-loader',
                     exclude: [/node_modules/]
+                },
+                {
+                    test: /\.json5$/,
+                    loader: 'json5-loader'
                 }
             ]
         },
@@ -176,7 +184,7 @@ module.exports = function(env, argv) {
             }
         },
         resolve: {
-            extensions: ['.js', '.ts', '.json']
+            extensions: ['.js', '.ts', '.json5', '.json']
         }
     }
 
