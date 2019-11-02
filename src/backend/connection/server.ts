@@ -72,7 +72,7 @@ export default class Server extends EventEmitter{
      * @throws StateException if the server is already open
      */
     public startServer(port: number = 8880) : void{
-        if(this.state == ServerState.STOPPED){
+        if(this.state !== ServerState.STOPPED){
             throw new StateException('Server already open')
         }
 
@@ -96,7 +96,7 @@ export default class Server extends EventEmitter{
      * Stops the server
      */
     public stopServer() : void{
-        if(this.state == ServerState.STARTED) {
+        if(this.state === ServerState.STARTED) {
             this._state = ServerState.STOPPING
             this.emit('stopping')
             this._server.close(() => {
