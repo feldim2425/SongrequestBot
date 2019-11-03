@@ -2,6 +2,14 @@ import process from 'process'
 
 import Server from './connection/server'
 import { ClientManager } from './connection/clients'
+import { ConfigHandler } from './config/config'
+
+
+const config = new ConfigHandler('./config.json5') // TODO: Add cmd argument to change the config
+config.on('error', console.error)
+config.on('update_config', (old, n) => console.log(n))
+config.loadConfig()
+
 
 const server = new Server(__dirname)
 console.log(`Server resources: ${server.resources}`)

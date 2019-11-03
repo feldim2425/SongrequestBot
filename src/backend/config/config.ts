@@ -19,7 +19,29 @@ export class ConfigHandler extends EventEmitter {
         this.clearBuffer()
     }
 
-    private clearBuffer(){
+    private _handleWriteError(err: NodeJS.ErrnoException){
+        if(!_.isNil(err)){
+            this.emit('error', err)
+        }
+        else {
+            this.emit('write_done')
+        }
+    }
+
+    private _handleReadError(err: NodeJS.ErrnoException): boolean{
+        if(!_.isNil(err)){
+            if(err.code === 'ENOENT'){
+                this.resetConfig()
+            }
+            else {
+                this.emit('error', err)
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public clearBuffer(){
         this._fallback = true
         this._configBuffer = {}
         checkObject(CHECK_CONFIG, this._configBuffer)
@@ -28,15 +50,15 @@ export class ConfigHandler extends EventEmitter {
     public resetConfig() : void {
         let configObject:object = {}
         checkObject(CHECK_CONFIG, configObject)
+        this.emit('update_config', this._configBuffer, configObject)
         this._configBuffer = configObject
-        fs.writeFile(this._path, JSON5.stringify(configObject), { encoding: 'utf8' }, () => this.emit('write_done'))
+        this._fallback = false
+        fs.writeFile(this._path, JSON5.stringify(configObject), { encoding: 'utf8' }, this._handleWriteError.bind(this))
     }
 
     public loadConfig() : void{
         fs.readFile(this._path,  { encoding: 'utf8' }, (err: NodeJS.ErrnoException | null, data: string) => {
-            if(!_.isNil(err)){
-                this.emit('error', err)
-                console.error('Config read error', err)
+            if(this._handleReadError(err)){
                 return
             }
 
@@ -45,20 +67,18 @@ export class ConfigHandler extends EventEmitter {
                 jsonData = JSON5.parse(data)
             }
             catch(e){
-                this.emit('error', err)
-                console.error('Config malformed', err)
+                this.emit('error', e)
                 return
             }
 
             let result = checkObject(CHECK_CONFIG, jsonData)
             if(!result.ok){
                 this.emit('error', new SyntaxError(result.error.message))
-                console.error(`Config type check failed: ${result.error.message}`)
             }
             else {
+                this.emit('update_config', this.configuration, jsonData)
                 this._fallback = false
                 this._configBuffer = jsonData
-                this.emit('load_config', this.configuration)
             }
         })
     }
@@ -68,7 +88,7 @@ export class ConfigHandler extends EventEmitter {
         this.emit('update_config', this.configuration, config)
         checkObject(CHECK_CONFIG, config)
         this._configBuffer = config
-        fs.writeFile(this._path, JSON5.stringify(config), { encoding: 'utf8' }, () => this.emit('write_done'))
+        fs.writeFile(this._path, JSON5.stringify(config), { encoding: 'utf8' }, this._handleWriteError.bind(this))
     }
 
     public get configuration(): object{
