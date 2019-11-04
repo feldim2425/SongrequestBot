@@ -3,9 +3,11 @@ import process from 'process'
 import Server from './connection/server'
 import { ClientManager } from './connection/clients'
 import { ConfigHandler } from './config/config'
+import parseCliArguments from './utils/cli_args'
 
+const args = parseCliArguments()
 
-const config = new ConfigHandler('./config.json5') // TODO: Add cmd argument to change the config
+const config = new ConfigHandler(args.config)
 config.on('error', console.error)
 config.on('update_config', (old, n) => console.log(n))
 config.loadConfig()
