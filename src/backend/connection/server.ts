@@ -45,7 +45,7 @@ export enum ServerState {
  */
 export default class Server extends EventEmitter{
 
-    private _expApp: express.Application | expressWs.Application
+    private _expApp: expressWs.Application
     private _expWs: expressWs.Instance
     private _resourcePath: string
     private _server?: httpServer
@@ -53,16 +53,24 @@ export default class Server extends EventEmitter{
     
     constructor(resourcePath: string){
         super()
-        this._expApp = express()
+        this._expApp = (<expressWs.Application> <unknown>express())
         this._expWs = expressWs(this._expApp)
         this._resourcePath = path.resolve(resourcePath)
 
         for(const [route, file] of Object.entries(FILE_MAPPINGS)){
             this._expApp.get(route, (req: express.Request, res: express.Response) => res.sendFile(path.join(this._resourcePath, file)))
         }
-        (<expressWs.Application> this._expApp).ws('/socket', (ws, req) => this.emit('client-connected', ws, req))
+        this._expApp.get('/audio', (req, res) => this._sendAudioStream(req, res))
+        this._expApp.ws('/socket', (ws, req) => this.emit('client_connected', ws, req))
 
         this._expApp.use(_redirectDashboard);
+    }
+
+    private _sendAudioStream(req: express.Request, res: express.Response){
+        console.warn('Audiostream tried to connect! But this feature isn\'t implemented yet!')
+        res.status(501).send('The audio stream isn\'t implementet yet. Soon&trade;')
+        // TODO Implement real time audio stream to playback the bots audio from the browser
+        //res.status(200).header('Content-Type', 'audio/mpeg')
     }
 
     /**
@@ -116,8 +124,12 @@ export default class Server extends EventEmitter{
     /**
      * @return the servers resource path (the directory for file serving)
      */
-    public get resources() : string{
+    public get resources() : string {
         return this._resourcePath
+    }
+
+    public serveAudioStream(stream: NodeJS.WritableStream) : void {
+
     }
 }
 
