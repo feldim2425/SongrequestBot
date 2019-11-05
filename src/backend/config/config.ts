@@ -2,7 +2,7 @@ import _ from 'lodash'
 import path from 'path'
 import fs from 'fs'
 import { EventEmitter } from 'events'
-import { CheckOptions, checkObject } from '../utils/objtypecheck'
+import { CheckOptions, checkType } from '../utils/objtypecheck'
 import JSON5 from 'json5'
 import CHECK_CONFIG from './checkConfigObject'
 import { timingSafeEqual } from 'crypto'
@@ -43,13 +43,13 @@ export class ConfigHandler extends EventEmitter {
 
     public clearBuffer(){
         this._fallback = true
-        this._configBuffer = {}
-        checkObject(CHECK_CONFIG, this._configBuffer)
+        const result = checkType(CHECK_CONFIG, {})
+        this._configBuffer = _.defaultTo(result.resultObj, {})
     }
 
     public resetConfig() : void {
-        let configObject:object = {}
-        checkObject(CHECK_CONFIG, configObject)
+        const result = checkType(CHECK_CONFIG, {})
+        let configObject:object = _.defaultTo(result.resultObj, {})
         this.emit('update_config', this._configBuffer, configObject)
         this._configBuffer = configObject
         this._fallback = false
@@ -71,14 +71,14 @@ export class ConfigHandler extends EventEmitter {
                 return
             }
 
-            let result = checkObject(CHECK_CONFIG, jsonData)
+            let result = checkType(CHECK_CONFIG, jsonData)
             if(!result.ok){
                 this.emit('error', new SyntaxError(result.error.message))
             }
             else {
-                this.emit('update_config', this.configuration, jsonData)
+                this.emit('update_config', this.configuration, result.resultObj)
                 this._fallback = false
-                this._configBuffer = jsonData
+                this._configBuffer = result.resultObj
             }
         })
     }
@@ -86,7 +86,7 @@ export class ConfigHandler extends EventEmitter {
     public setConfig(config: object) : void{
         config = _.cloneDeep(config)
         this.emit('update_config', this.configuration, config)
-        checkObject(CHECK_CONFIG, config)
+        checkType(CHECK_CONFIG, config)
         this._configBuffer = config
         fs.writeFile(this._path, JSON5.stringify(config), { encoding: 'utf8' }, this._handleWriteError.bind(this))
     }

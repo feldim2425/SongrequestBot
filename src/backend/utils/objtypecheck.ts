@@ -23,9 +23,13 @@ export type TypeOption = {
      */
     subel? : CheckOptions
     /**
+     * 
+     */
+    deleteObsolete? : boolean
+    /**
      * Default value. Is ignored when subel is set. If the default value is given required will be ignored
      */
-    defaultVal?: any
+    defaultVal? : any
 } 
 
 export enum FailureType {
@@ -40,6 +44,7 @@ export type CheckResult = {
         type: FailureType,
         key: string
     },
+    resultObj?: any,
     appliedDefaults: boolean,
     ok: boolean
 }
@@ -68,10 +73,11 @@ function makeResultError(key: string, failure: FailureType, defaultsApplied: boo
     return result
 }
 
-function makeResultOk(defaultsApplied: boolean) : CheckResult{
+function makeResultOk(defaultsApplied: boolean, resultObj) : CheckResult{
     return {
         ok: true,
-        appliedDefaults: defaultsApplied
+        appliedDefaults: defaultsApplied,
+        resultObj
     }
 }
 
@@ -91,69 +97,96 @@ function hasSubDefaults(options: CheckOptions) : boolean{
     return false
 }
 
-export function checkObject(options: CheckOptions, check: object, applyDefaults?: boolean, _objpath = '') : CheckResult{
+export function checkType(option: TypeOption, check: any, applyDefaults?: boolean) : CheckResult{
+    return checkTypeRec(_.cloneDeep(option), _.cloneDeep(check), _.defaultTo(applyDefaults, true), '$')
+}
 
-    applyDefaults = _.isNil(applyDefaults) ? true : applyDefaults
-    _objpath = _objpath.length > 0 ? _objpath + '.' : _objpath
-    let defaultsApplied = false;
-
+function checkObject(options: CheckOptions, check: object, applyDefaults: boolean, deleteObsolete: boolean, objpath : string) : CheckResult{
+    objpath += '.'
+    let appliedDefaults = false
     for(let [key, option] of Object.entries(options)){
-        _.defaults(option, {
-            subel: undefined,
-            required: false,
-            defaultVal: undefined,
-            checkfunction: () => true
-        })
-
-        // Key exists and it's value isn't undefined
-        if(check.hasOwnProperty(key) && check[key] !== undefined){ 
-            if(!_.isNil(option.subel)){
-                if(!_.isObjectLike(check[key]) || !option.checkfunction(check[key])){
-                    return makeResultError(_objpath + key, FailureType.WRONG_TYPE, defaultsApplied)
-                }
-
-                let subResult = checkObject(option.subel, check[key], applyDefaults, _objpath + key)
-                if(!subResult.ok){
-                    subResult.appliedDefaults = subResult.appliedDefaults || defaultsApplied
-                    return subResult
-                }
-            }
-            else if (!option.checkfunction(check[key])) {
-                return makeResultError(_objpath + key, FailureType.WRONG_TYPE, defaultsApplied)
-            }
+        const subResult = checkTypeRec(option, check[key], applyDefaults, objpath + key)
+        if(subResult.ok){
+            appliedDefaults = subResult.appliedDefaults
+            check[key] = subResult.resultObj
         }
-        // Key doesn't exist (or value is undefined) but we are allowed to apply default values
-        else if(applyDefaults){
-            // Apply defaults to sub-object. hasSubDefaults checks for sub-object automatically.
-            // If no sub defaults are set the sub-object isn't set either
-            if(hasSubDefaults(option.subel)){
-                check[key] = {}
-                if(!option.checkfunction(check[key])){
-                    return makeResultError(_objpath + key, FailureType.WRONG_TYPE, defaultsApplied)
-                }
-
-                let subResult = checkObject(option.subel, check[key], applyDefaults, _objpath + key)
-                defaultsApplied = true
-                if(!subResult.ok){
-                    subResult.appliedDefaults = true
-                    return subResult
-                }
-                
-            }
-            // Just setting the normal default for non-sub-objects
-            else if(_.isNil(option.subel) && option.defaultVal !== undefined){
-                check[key] = _.cloneDeep(option.defaultVal)
-
-                if(!option.checkfunction(check[key])) {
-                    return makeResultError(_objpath + key, FailureType.WRONG_TYPE, defaultsApplied)
-                }
-                defaultsApplied = true
-            }
-        }
-        // Key doesn't exist (or value is undefined), we aren't allowed to apply defaults and the key is required => Error
-        else if(option.required) {
-            return makeResultError(_objpath + key, FailureType.MISSING_KEY, defaultsApplied)
+        else {
+            subResult.appliedDefaults = subResult.appliedDefaults || appliedDefaults
+            return subResult
         }
     }
-    return makeResultOk(defaultsApplied)
+
+    if(deleteObsolete){
+        check = _.pick(check, Object.keys(options))
+    }
+
+    return makeResultOk(appliedDefaults, check)
+}
+
+function checkTypeRec(option: TypeOption, check: any, applyDefaults: boolean, objpath : string) : CheckResult{
+    _.defaults(option, {
+        subel: undefined,
+        required: false,
+        defaultVal: undefined,
+        deleteObsolete: true,
+        checkfunction: () => true
+    })
+
+    let appliedDefaults = false
+
+    // Value defined
+    if(check !== undefined){
+        // Option for subelements are defined. Therefore it has to be a object
+        if(!_.isNil(option.subel)){
+            // If it isn't an object but subel is defined, then it is a wrong type
+            if(!_.isObjectLike(check)){
+                return makeResultError(objpath, FailureType.WRONG_TYPE, appliedDefaults)
+            }
+            // It is a object so we check the object structure
+            else {
+                const subResult = checkObject(option.subel, check , applyDefaults, option.deleteObsolete, objpath)
+                if(subResult.ok){
+                    appliedDefaults = subResult.appliedDefaults
+                    check = subResult.resultObj
+                }
+                else {
+                    subResult.appliedDefaults = subResult.appliedDefaults || appliedDefaults
+                    return subResult
+                }
+            }
+        }
+    }
+    // Value undefined but defaults should be applied
+    else if(applyDefaults){
+        // It is a object that has child elements with default values
+        // So we make a empty object and handle it as a normal object
+        if(hasSubDefaults(option.subel)){
+            check = {}
+            const subResult = checkObject(option.subel, check, applyDefaults, option.deleteObsolete, objpath)
+            if(subResult.ok){
+                appliedDefaults = subResult.appliedDefaults
+                check = subResult.resultObj
+            }
+            else {
+                subResult.appliedDefaults = subResult.appliedDefaults || appliedDefaults
+                return subResult
+            }
+        }
+        // Subel isn't set (therefor not an object) and defaultVal is defined
+        else if(_.isNil(option.subel) && option.defaultVal !== undefined){
+            check = _.cloneDeep(option.defaultVal)
+            appliedDefaults = true
+        }
+    }
+
+    // check isn't defined (either because applying defaults is disabled or not set in the config) but it is required => error
+    if(check === undefined && option.required){
+        return makeResultError(objpath, FailureType.MISSING_KEY, appliedDefaults)
+    }
+    // the given check-function decides at the end if the type is correct
+    if(!option.checkfunction(check)){
+        return makeResultError(objpath, FailureType.WRONG_TYPE, appliedDefaults)
+    }
+
+    return makeResultOk(appliedDefaults, check)
 }
