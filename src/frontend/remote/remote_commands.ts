@@ -20,6 +20,11 @@ export function handleCommand(connection:BackendConnection, cmd:string, ...args:
                 store.dispatch('playing', args[0])
             }
             break
+        case 'update_config':
+            if(args.length == 1 && _.isObject(args[0])){
+                store.dispatch('updateConfig', args[0])
+            }
+            break
         default:
             console.log(`Unknown command: ${cmd}`)
     }

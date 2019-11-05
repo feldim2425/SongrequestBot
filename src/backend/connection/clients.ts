@@ -2,6 +2,8 @@ import Server from './server'
 import ws from 'ws'
 import { EventEmitter } from 'events'
 import _ from 'lodash'
+import { ConfigHandler } from '../config/config'
+import { OMIT_CLIENT_CONFIG } from '../constants'
 
 /**
  * This Class is not stricly necessary, but it makes it more futureproof incase per client data becomes a thing we need.
@@ -61,14 +63,18 @@ export class FrontendConnection extends EventEmitter{
  * and relays messages to the clients
  */
 export class ClientManager extends EventEmitter {
-    private _server:Server
+    private _server: Server
+    private _config: ConfigHandler
     private _frontend_cons: FrontendConnection[] = []
 
-    constructor(server: Server){
+    constructor(server: Server, config: ConfigHandler){
         super()
         this._server = server
+        this._config = config
         this._server.on('client_connected', (ws) => this._connect_ws(ws))
         this._server.on('stopping', () => this.closeAll())
+        
+        this._config.on('update_config', (oldC, newC) => this.sendCommand('update_config', _.omit(newC, OMIT_CLIENT_CONFIG)))
     }
 
     private _connect_ws(ws: ws) : void{
@@ -78,8 +84,10 @@ export class ClientManager extends EventEmitter {
         con.on('close', () => {
             _.remove(this._frontend_cons, (listCon) => listCon === con)
         })
-        console.info('Client connected')
 
+        con.sendCommand('update_config', _.omit(this._config.configuration, OMIT_CLIENT_CONFIG))
+        
+        console.info('Client connected')
         this.emit('new_client', con)
     }
 

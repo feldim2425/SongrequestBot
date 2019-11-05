@@ -19,7 +19,7 @@ const CHECK_CONFIG : CheckOptions = {
         subel: {
             'twitch': {
                 subel: {
-                    'userbame': {
+                        'username': {
                         checkfunction: _.isString,
                         defaultVal: ''
                     },
