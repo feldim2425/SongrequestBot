@@ -5,10 +5,10 @@ function _getUrl(endpoint: string) : string{
     const loc = window.location
     var url = ''
     if(loc.protocol === 'https:'){
-        url += 'wss:'
+        url += 'wss://'
     }
     else {
-        url += 'ws:'
+        url += 'ws://'
     }
 
     if(endpoint.startsWith('//')){
