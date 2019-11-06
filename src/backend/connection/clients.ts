@@ -91,14 +91,14 @@ export class ClientManager extends EventEmitter {
         this.emit('new_client', con)
     }
 
-    private _parseMessage(message: MessageEvent): void {
-        if(!_.isString(message.data)){
+    private _parseMessage(message: ws.Data): void {
+        if(!_.isString(message)){
             return
         }
         let command : string = undefined
         let args : any[] = []
         try{
-            let msgObj = JSON.parse(message.data)
+            let msgObj = JSON.parse(message)
             if(!_.isObject(msgObj) || !msgObj.hasOwnProperty('command') || !_.isString(msgObj['command'])){
                 return
             }

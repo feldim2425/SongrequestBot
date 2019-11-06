@@ -2,7 +2,7 @@ import _ from 'lodash'
 import path from 'path'
 import fs from 'fs'
 import { EventEmitter } from 'events'
-import { CheckOptions, checkType } from '../utils/objtypecheck'
+import { CheckOptions, checkType, CheckResult } from '../utils/objtypecheck'
 import JSON5 from 'json5'
 import CHECK_CONFIG from './checkConfigObject'
 import { timingSafeEqual } from 'crypto'
@@ -83,12 +83,15 @@ export class ConfigHandler extends EventEmitter {
         })
     }
 
-    public setConfig(config: object) : void{
+    public setConfig(config: object) : CheckResult{
         config = _.cloneDeep(config)
         this.emit('update_config', this.configuration, config)
-        checkType(CHECK_CONFIG, config)
-        this._configBuffer = config
-        fs.writeFile(this._path, JSON5.stringify(config), { encoding: 'utf8' }, this._handleWriteError.bind(this))
+        const result = checkType(CHECK_CONFIG, config)
+        if(result.ok){
+            this._configBuffer = result.resultObj
+            fs.writeFile(this._path, JSON5.stringify(result.resultObj), { encoding: 'utf8' }, this._handleWriteError.bind(this))
+        }
+        return result
     }
 
     public get configuration(): object{

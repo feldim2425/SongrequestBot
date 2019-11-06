@@ -4,6 +4,7 @@ import Server from './connection/server'
 import { ClientManager } from './connection/clients'
 import { ConfigHandler } from './config/config'
 import parseCliArguments from './utils/cli_args'
+import attachHandler from './connection/remote_commands'
 
 const args = parseCliArguments()
 
@@ -17,6 +18,8 @@ const server = new Server(__dirname)
 console.log(`Server resources: ${server.resources}`)
 const clientHandler = new ClientManager(server, config);
 server.startServer();
+
+attachHandler(clientHandler, config)
 
 function onExit(){
     server.stopServer()
