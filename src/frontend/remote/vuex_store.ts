@@ -45,11 +45,14 @@ const store = new Vuex.Store<State>({
         },
 
         applyConfigMutations(context: ActionContext<State,State>){
-            context.commit('setConfig', this.getters.editingConfig)
+            const changed = this.getters.editingConfig
+            if(!_.isEqual(changed, context.state.config)){
+                context.commit('setConfig', this.getters.editingConfig)
+            }
         },
 
         putConfigMutation(context: ActionContext<State,State>, cfg: object): void{
-            let changed = Object.assign({}, context.state.configMutations, cfg)
+            let changed = _.defaultsDeep({}, cfg, context.state.configMutations)
             if(!_.isEqual(changed, context.state.configMutations)){
                 context.commit('setConfigMutations', changed)
             }
@@ -70,7 +73,7 @@ const store = new Vuex.Store<State>({
     },
     getters: {
         editingConfig(state: State) : object{
-            return Object.assign({}, state.config, state.configMutations)
+            return _.defaultsDeep({}, state.configMutations, state.config)
         }
     },
     modules: {},
