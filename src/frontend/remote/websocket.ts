@@ -74,7 +74,7 @@ export default class BackendConnection extends EventEmitter {
     }
 
     public sendCommand(command: string, ...args:any[]){
-        if(this.connect){
+        if(this.open){
             let msg = JSON.stringify({command, args})
             this._socket.send(msg)
         }

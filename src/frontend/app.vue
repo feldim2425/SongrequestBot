@@ -14,7 +14,7 @@
                 </template>
             </b-modal>
         </div>
-        <Settings modalId="settings-modal" @settings-close="showSettings = false"/>
+        <Settings :connection="connection" modalId="settings-modal" @settings-close="showSettings = false"/>
     </div>
 </template>
 
