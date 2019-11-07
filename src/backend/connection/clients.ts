@@ -11,6 +11,7 @@ import { OMIT_CLIENT_CONFIG } from '../constants'
  */
 export class FrontendConnection extends EventEmitter{
     private _ws: ws
+    private _auth: boolean = false
 
     constructor(ws :ws){
         super()
@@ -56,6 +57,26 @@ export class FrontendConnection extends EventEmitter{
     public get socket() :ws{
         return this._ws
     }
+
+    public get authenticated():boolean{
+        return this._auth
+    }
+
+    public set authenticated(value: boolean){
+        if(this._auth === value){
+            return
+        }
+        this._auth = value
+        if(value){
+            this.sendCommand('login_ok')
+            this.emit('login')
+        }
+        else {
+            this.sendCommand('login_required')
+            this.emit('logout')
+        }
+        
+    }
 }
 
 /**
@@ -80,18 +101,27 @@ export class ClientManager extends EventEmitter {
     private _connect_ws(ws: ws) : void{
         const con = new FrontendConnection(ws)
         this._frontend_cons.push(con)
-        con.on('message', (message) => this._parseMessage(message))
+        con.on('message', (message) => this._parseMessage(message, con))
         con.on('close', () => {
             _.remove(this._frontend_cons, (listCon) => listCon === con)
         })
 
-        con.sendCommand('update_config', _.omit(this._config.configuration, OMIT_CLIENT_CONFIG))
+        con.on('login', () => {
+            con.sendCommand('update_config', _.omit(this._config.configuration, OMIT_CLIENT_CONFIG))
+        })
+
+        if(_.isEmpty(this._config.configuration['server']['dashboard_sha256'])){
+            con.authenticated = true
+        }
+        else {
+            con.sendCommand('login_required')
+        }
         
         console.info('Client connected')
         this.emit('new_client', con)
     }
 
-    private _parseMessage(message: ws.Data): void {
+    private _parseMessage(message: ws.Data, con: FrontendConnection): void {
         if(!_.isString(message)){
             return
         }
@@ -112,7 +142,7 @@ export class ClientManager extends EventEmitter {
         }
 
         if(!_.isNil(command)){
-            this.emit('command', command, args)
+            this.emit('command', con, command, args)
         }
     }
 
@@ -134,6 +164,13 @@ export class ClientManager extends EventEmitter {
     }
 
     /**
+     * @returns a list of all authenticated clients
+     */
+    get loggedInClients(): FrontendConnection[]{
+        return this._frontend_cons.filter((val, index, arr) => val.authenticated)
+    }
+
+    /**
      * Sends a command to all clients
      * @param command Command to execute
      * @param args Arguments
@@ -141,7 +178,9 @@ export class ClientManager extends EventEmitter {
     public sendCommand(command: string, ...args:any[]) : void{
         let msg = JSON.stringify({command, args})
         for(let con of this._frontend_cons){
-            con.socket.send(msg)
+            if(con.authenticated){
+                con.socket.send(msg)
+            }
         }
     }
 }
