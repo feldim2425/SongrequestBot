@@ -28,7 +28,7 @@ or use a Apache / NginX - HTTP proxy that adds SSL/TLS encryption and at least b
 ## Limitations
 
 ### No Spotify streaming
-The Spotify integration can't provide a audio stream to the internal players (webstream, discord voicechat, native playback), therefor playback is only possible trough a Spotify Client (Web, Desktop, Mobile, Third-Party devices) that supports remote controll from the spotify web api.
+The Spotify integration can't provide a audio stream to the internal players (webstream, discord voicechat, native playback), therefor playback is only possible trough a Spotify Client (Web, Desktop, Mobile, Third-Party devices) that supports remote control from the spotify web api (first-party players like the official app and desktop application do).
 
 Since implementing this feature might violate Spotifies "Terms of Service" this feature won't be implemented even if a npm module appears that claims to capture the stream. Any pullrequests implementing this feature will get denied. The only way I will implement this is, if Spotify changes the ToS.
 
