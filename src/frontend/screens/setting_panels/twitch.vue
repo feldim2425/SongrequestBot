@@ -4,16 +4,16 @@
         <br/>
         <b-card bg-variant="secondary">
             <b-form-group label="OAuthToken" :label-for="scoped('input-oauth')">
-                <b-form-input :id="scoped('input-oauth')" type="password"></b-form-input>
+                <input :id="scoped('input-oauth')" :value="settings.logins.twitch.oauth" @input="updateSettings($event.target.value, path='logins.twitch.oauth')" type="password" class="form-control"/>
             </b-form-group>
             <b-button pill variant="light" size="sm" href="https://twitchapps.com/tmi/" rel="noopener noreferrer" target="_blank">Get OAuth Token [Don't show this publicly!]</b-button>
             <b-form-group label="Username" :label-for="scoped('input-user')">
-                <b-form-input :id="scoped('input-user')" type="text"></b-form-input>
+                <input :id="scoped('input-user')" :value="settings.logins.twitch.username" @input="updateSettings($event.target.value, path='logins.twitch.username')" type="text" class="form-control"/>
             </b-form-group>
         </b-card>
         <b-card bg-variant="secondary">
             <b-form-group label="Channel" :label-for="scoped('input-channel')">
-                <b-form-input :id="scoped('input-channel')" type="text"></b-form-input>
+                <input :id="scoped('input-channel')" :value="settings.inputs.twitch_channel" @input="updateSettings($event.target.value, path='settings.inputs.twitch_channel')" type="text" class="form-control"/>
             </b-form-group>
         </b-card>
 
@@ -49,8 +49,13 @@ export default class TwitchSettingsPanel extends Mixins(CustomScopeMixin){
         return Object.assign({
             logins: {
                 twitch: {
-                    enabled : false
+                    enabled : false,
+                    username: '',
+                    oauth: ''
                 }
+            },
+            inputs: {
+                twitch_channel: ''
             }
         }, this.value)
     }
