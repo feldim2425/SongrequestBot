@@ -37,9 +37,9 @@ const store = new Vuex.Store<State>({
         },
 
         applyConfigMutations(context: ActionContext<State,State>, cfg: object){
-            const changed = _.defaultsDeep({}, cfg, context.state.config)
+            const changed = _.defaultsDeep(_.cloneDeep(cfg), context.state.config)
             if(!_.isEqual(changed, context.state.config)){
-                context.commit('setConfig', this.getters.editingConfig)
+                context.commit('setConfig', changed)
             }
         }
     },
