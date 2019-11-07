@@ -11,12 +11,16 @@ const args = parseCliArguments()
 const config = new ConfigHandler(args.config)
 config.on('error', console.error)
 //config.on('update_config', (old, n) => console.log(n))
-config.loadConfig()
+
 
 
 const server = new Server(__dirname)
 console.log(`Server resources: ${server.resources}`)
 const clientHandler = new ClientManager(server, config);
+
+config.on('update_config', (old,n) => server.updateServerConfiguration(n.server))
+config.loadConfig()
+
 server.startServer();
 
 attachHandler(clientHandler, config)

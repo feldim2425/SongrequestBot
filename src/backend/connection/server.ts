@@ -3,9 +3,11 @@ import expressWs from 'express-ws'
 import {EventEmitter} from 'events'
 import path from 'path'
 import * as _ from 'lodash'
-import {Server as httpServer} from 'http'
+import http, {Server as httpServer} from 'http'
+import https, {Server as httpsServer} from 'https'
 import {StateException} from '../utils/errors'
 import ws from 'ws'
+
 
 function _redirectDashboard(req: express.Request|undefined, res: express.Response) : void{
     res.redirect('/dashboard')
@@ -14,6 +16,16 @@ function _redirectDashboard(req: express.Request|undefined, res: express.Respons
 const FILE_MAPPINGS : {[key:string]: string} = {
     '/dashboard': 'view.html',
     '/frontend.js': 'frontend.js'
+}
+
+export type ServerConfiguration = {
+    enable_https?: boolean,
+    dashboard_sha256?: string,
+    https?: {
+        ca?: string,
+        cert?: string,
+        key?: string
+    }
 }
 
 /**
@@ -48,14 +60,19 @@ export default class Server extends EventEmitter{
     private _expApp: expressWs.Application
     private _expWs: expressWs.Instance
     private _resourcePath: string
-    private _server?: httpServer
+    private _server?: httpServer | httpsServer
     private _state: ServerState = ServerState.STOPPED
+    private _restarting: boolean
+    private _port:number
+    private _serverConfig: ServerConfiguration | undefined = undefined
     
     constructor(resourcePath: string){
         super()
         this._expApp = (<expressWs.Application> <unknown>express())
+        //FIXME: Due to the way the server is initialized via the http module the express-ws module doesn't work. Rewrite to normal 'ws' module
         this._expWs = expressWs(this._expApp)
         this._resourcePath = path.resolve(resourcePath)
+        this._restarting = false
 
         for(const [route, file] of Object.entries(FILE_MAPPINGS)){
             this._expApp.get(route, (req: express.Request, res: express.Response) => res.sendFile(path.join(this._resourcePath, file)))
@@ -73,6 +90,50 @@ export default class Server extends EventEmitter{
         //res.status(200).header('Content-Type', 'audio/mpeg')
     }
 
+    private _setState(state: ServerState){
+        this._state = state
+        this.emit('state', state)
+    }
+
+    private _initializeServer(){
+        switch(this._state){
+            case ServerState.STARTED:
+                // Server is up. stop it and wait for the Stopped or Stopping state
+                console.log('Reinitializing Server...')
+                this._restarting = true
+                this.once('state', () => this._initializeServer())
+                this.stopServer()
+                break
+            case ServerState.STOPPING:
+            case ServerState.STARTING:
+                // The Server is in the process of starting or stopping. 
+                // Either way we have to wait until the process finished to do something like stopping it
+                this.once('state', () => this._initializeServer())
+                break;
+            case ServerState.STOPPED:
+                this._server = http.createServer(this._expApp)
+                if(this._restarting){
+                    this._restarting = false
+                    this.startServer(this._port)
+                }
+        }
+    }
+
+    /**
+     * Updates the server configuration and restarts the server if it was started before or scheduled to start.
+     * It also avoids unnecessary updates when the config didn't change. This method has to be called at least once
+     * in order for the server to start. This is a security measure to prevent the server from starting in http or without password
+     * when configured otherwise. Since this function avoids unnecessary updates it can be called directly when the config updates.
+     * @param {ServerConfiguration} config new Server configuration
+     */
+    public updateServerConfiguration(config : ServerConfiguration){
+        const newConf = _.defaultsDeep({}, config, Server.defaultConfig)
+        if(_.isNil(this._server) || _.isNil(this._serverConfig) || !_.isEqual(this._serverConfig, newConf)){
+            this._serverConfig = newConf
+            this._initializeServer()
+        }
+    }
+
     /**
      * Start the server on the given port. 
      * @param {number} port server port defailts to 8880
@@ -84,19 +145,19 @@ export default class Server extends EventEmitter{
             throw new StateException('Server already open')
         }
 
-        this._state = ServerState.STARTING
-        this.emit('starting')
+        this._port = port
+        if(_.isNil(this._server)){
+            console.log('Server start waiting for initialization')
+            this._restarting = true
+            return
+        }
 
-        if(_.isNil(this._server)) {
-            this._server = this._expApp.listen(port)
-        }
-        else {
-            this._server.listen(port)
-        }
+        this._setState(ServerState.STARTING)
+
+        this._server.listen(port)
         this._server.once('listening', () => {
-            this._state = ServerState.STARTED
-            console.log(`Server lisening on port '${port}'`)
-            this.emit('started', port)
+            console.log(`Server listening on port '${port}'`)
+            this._setState(ServerState.STARTED)
         });
     }
 
@@ -105,11 +166,9 @@ export default class Server extends EventEmitter{
      */
     public stopServer() : void{
         if(this.state === ServerState.STARTED) {
-            this._state = ServerState.STOPPING
-            this.emit('stopping')
+            this._setState(ServerState.STOPPING)
             this._server.close(() => {
-                this._state = ServerState.STOPPED
-                this.emit('stopped')
+                this._setState(ServerState.STOPPED)
             })
         }
     }
@@ -130,6 +189,18 @@ export default class Server extends EventEmitter{
 
     public serveAudioStream(stream: NodeJS.WritableStream) : void {
 
+    }
+
+    public static get defaultConfig(): ServerConfiguration{
+        return {
+            'enable_https':false,
+            'dashboard_sha256': null,
+            'https': {
+                'ca': '',
+                'cert': '',
+                'key': ''
+            }
+        }
     }
 }
 
