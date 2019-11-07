@@ -8,15 +8,13 @@ Vue.use(Vuex);
 
 export type State = {
     songlist: Song[],
-    config: object,
-    configMutations: object
+    config: object
 }
 
 const store = new Vuex.Store<State>({
     state: {
         songlist: [],
-        config: {},
-        configMutations: {}
+        config: {}
     },
     actions: {
         addSongs(context: ActionContext<State,State>, songs: Song[]){
@@ -38,23 +36,10 @@ const store = new Vuex.Store<State>({
             }
         },
 
-        clearConfigMutations(context: ActionContext<State,State>){
-            if(!_.isEmpty(context.state.configMutations)){
-                context.commit('setConfigMutations', {})
-            }
-        },
-
-        applyConfigMutations(context: ActionContext<State,State>){
-            const changed = this.getters.editingConfig
+        applyConfigMutations(context: ActionContext<State,State>, cfg: object){
+            const changed = _.defaultsDeep({}, cfg, context.state.config)
             if(!_.isEqual(changed, context.state.config)){
                 context.commit('setConfig', this.getters.editingConfig)
-            }
-        },
-
-        putConfigMutation(context: ActionContext<State,State>, cfg: object): void{
-            let changed = _.defaultsDeep({}, cfg, context.state.configMutations)
-            if(!_.isEqual(changed, context.state.configMutations)){
-                context.commit('setConfigMutations', changed)
             }
         }
     },
@@ -65,17 +50,9 @@ const store = new Vuex.Store<State>({
 
         setConfig(state:State, cfg: object): void {
             state.config = cfg
-        },
-
-        setConfigMutations(state:State, cfg: object): void{
-            state.configMutations = cfg
-        },
-    },
-    getters: {
-        editingConfig(state: State) : object{
-            return _.defaultsDeep({}, state.configMutations, state.config)
         }
     },
+    getters: {},
     modules: {},
 })
 

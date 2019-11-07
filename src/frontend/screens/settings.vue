@@ -8,6 +8,7 @@
             <b-tabs justified content-class="mt-3">
                 <b-tab :title-link-class="['bg-dark','text-light']" title="General" active>
                     <h5>General</h5>
+                    <general-settings v-model="settings"/>
                 </b-tab>
                 <b-tab :title-link-class="['bg-dark','text-light']" title="Twitch">
                     <h5>Twitch Settings</h5>
@@ -49,44 +50,48 @@ import Vue from 'vue'
 import { Component, Prop, Mixins } from 'vue-property-decorator'
 import BackendConnection from '../remote/websocket'
 import _ from 'lodash'
-import TwitchSettingsPanel from './setting_panels/twitch.vue'
 import CustomScopeMixin from '../mixins/custom_scope_mixin'
+
+import TwitchSettingsPanel from './setting_panels/twitch.vue'
+import GeneralSettingsPanel from './setting_panels/general.vue'
 
 @Component({
     name: 'Settings',
     components: {
-        'twitch-settings': TwitchSettingsPanel
+        'twitch-settings': TwitchSettingsPanel,
+        'general-settings': GeneralSettingsPanel
     }
 })
 export default class Settings extends Mixins(CustomScopeMixin){
     @Prop({default: 'settings-modal'})
     public modalId:string
-
     @Prop()
     public connection:BackendConnection
+
+    public mutateConfigCache:object = {}
 
     public handleHide(event: any){
         this.$emit('settings-close')
     }
 
     public confReset(){
-        this.$store.dispatch('clearConfigMutations')
+        this.mutateConfigCache = {}
     }
 
     public confApply(){
-        if(this.connection.open && !_.isEmpty(this.$store.state.configMutations)){
-            this.connection.sendCommand('mutate_config', this.$store.state.configMutations)
+        if(this.connection.open && !_.isEmpty(this.mutateConfigCache)){
+            this.connection.sendCommand('mutate_config', this.mutateConfigCache)
         }
-        this.$store.dispatch('applyConfigMutations')
-        this.$store.dispatch('clearConfigMutations')
+        this.$store.dispatch('applyConfigMutations', this.mutateConfigCache)
+        this.mutateConfigCache = {}
     }
 
     get settings():object{
-        return this.$store.getters.editingConfig
+        return _.defaultsDeep({}, this.mutateConfigCache, this.$store.state.config)
     }
 
     set settings(val: object){
-        this.$store.dispatch('putConfigMutation', val)
+        this.mutateConfigCache = _.defaultsDeep({}, val, this.mutateConfigCache)
     }
 }
 </script>
