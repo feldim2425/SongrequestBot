@@ -13,13 +13,15 @@
         </b-card>
         <b-card bg-variant="secondary">
             <b-form-group label="Channel" :label-for="scoped('input-channel')">
-                <input :id="scoped('input-channel')" :value="settings.inputs.twitch_channel" @input="updateSettings($event.target.value, path='settings.inputs.twitch_channel')" type="text" class="form-control"/>
+                <input :id="scoped('input-channel')" :value="settings.inputs.twitch_channel" @input="updateSettings($event.target.value, path='inputs.twitch_channel')" type="text" class="form-control"/>
             </b-form-group>
         </b-card>
 
+        
         <b-popover :target="scoped('input-oauth')" triggers="hover" placement="top">
             <template v-slot:title>OAuth Token</template>
-            The twitch oauth token. You can click it by the button below but don't open it publicly.
+            The twitch oauth token. You can click it by the button below but don't open it publicly.<br/>
+            (Info: The token isn't synced with all clients therefore it will show blank)
         </b-popover>
         <b-popover :target="scoped('input-user')" triggers="hover" placement="top">
             <template v-slot:title>Username</template>
