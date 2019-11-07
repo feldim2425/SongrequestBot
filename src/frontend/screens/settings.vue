@@ -61,32 +61,33 @@ import CustomScopeMixin from '../mixins/custom_scope_mixin'
 export default class Settings extends Mixins(CustomScopeMixin){
     @Prop({default: 'settings-modal'})
     public modalId:string
-
     @Prop()
     public connection:BackendConnection
+
+    public mutateConfigCache:object = {}
 
     public handleHide(event: any){
         this.$emit('settings-close')
     }
 
     public confReset(){
-        this.$store.dispatch('clearConfigMutations')
+        this.mutateConfigCache = {}
     }
 
     public confApply(){
-        if(this.connection.open && !_.isEmpty(this.$store.state.configMutations)){
-            this.connection.sendCommand('mutate_config', this.$store.state.configMutations)
+        if(this.connection.open && !_.isEmpty(this.mutateConfigCache)){
+            this.connection.sendCommand('mutate_config', this.mutateConfigCache)
         }
-        this.$store.dispatch('applyConfigMutations')
-        this.$store.dispatch('clearConfigMutations')
+        this.$store.dispatch('applyConfigMutations', this.mutateConfigCache)
+        this.mutateConfigCache = {}
     }
 
     get settings():object{
-        return this.$store.getters.editingConfig
+        return _.defaultsDeep({}, this.mutateConfigCache, this.$store.state.config)
     }
 
     set settings(val: object){
-        this.$store.dispatch('putConfigMutation', val)
+        this.mutateConfigCache = _.defaultsDeep({}, val, this.mutateConfigCache)
     }
 }
 </script>
