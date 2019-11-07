@@ -184,7 +184,7 @@ function checkTypeRec(option: TypeOption, check: any, applyDefaults: boolean, ob
         return makeResultError(objpath, FailureType.MISSING_KEY, appliedDefaults)
     }
     // the given check-function decides at the end if the type is correct
-    if(!option.checkfunction(check)){
+    if(check !== undefined && !option.checkfunction(check)){
         return makeResultError(objpath, FailureType.WRONG_TYPE, appliedDefaults)
     }
 

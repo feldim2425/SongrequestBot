@@ -4,6 +4,31 @@ import { DEFAULT_ECDH_CURVE } from 'tls';
 
 const CHECK_CONFIG : TypeOption = {
     subel: {
+        'server': {
+            subel: {
+                'enable_https':{
+                    checkfunction: _.isBoolean,
+                    defaultVal: false
+                },
+                'dashboard_sha256': {
+                    checkfunction: _.isString,
+                    defaultVal: '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918' // => sha256("admin")
+                },
+                'https': {
+                    subel: {
+                        'ca': {
+                            checkfunction: _.isString
+                        },
+                        'cert': {
+                            checkfunction: _.isString
+                        },
+                        'key': {
+                            checkfunction: _.isString
+                        },
+                    }
+                }
+            }
+        },
         'playback_enabled': {
             subel: {
                 'spotify': {
