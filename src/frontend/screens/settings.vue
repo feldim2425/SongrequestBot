@@ -8,6 +8,7 @@
             <b-tabs justified content-class="mt-3">
                 <b-tab :title-link-class="['bg-dark','text-light']" title="General" active>
                     <h5>General</h5>
+                    <general-settings v-model="settings"/>
                 </b-tab>
                 <b-tab :title-link-class="['bg-dark','text-light']" title="Twitch">
                     <h5>Twitch Settings</h5>
@@ -49,13 +50,16 @@ import Vue from 'vue'
 import { Component, Prop, Mixins } from 'vue-property-decorator'
 import BackendConnection from '../remote/websocket'
 import _ from 'lodash'
-import TwitchSettingsPanel from './setting_panels/twitch.vue'
 import CustomScopeMixin from '../mixins/custom_scope_mixin'
+
+import TwitchSettingsPanel from './setting_panels/twitch.vue'
+import GeneralSettingsPanel from './setting_panels/general.vue'
 
 @Component({
     name: 'Settings',
     components: {
-        'twitch-settings': TwitchSettingsPanel
+        'twitch-settings': TwitchSettingsPanel,
+        'general-settings': GeneralSettingsPanel
     }
 })
 export default class Settings extends Mixins(CustomScopeMixin){
