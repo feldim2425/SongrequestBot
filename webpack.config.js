@@ -37,6 +37,8 @@ module.exports = function(env, argv) {
         mode: 'development',
         
         entry: {
+            // TO FUTURE ME: this line increases the filesize of the frontend.js output but enables usage of async methods
+            //frontend: ['@babel/polyfill', './src/frontend/index.ts']
             frontend: './src/frontend/index.ts'
         },
 
@@ -129,7 +131,7 @@ module.exports = function(env, argv) {
         mode: 'development',
         
         entry: {
-            backend: './src/backend/index.ts'
+            backend:  ['@babel/polyfill','./src/backend/index.ts']
         },
 
         target: 'node',

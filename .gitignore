@@ -5,3 +5,5 @@
 /dist/
 /docs/
 /run_config.json5
+/.testcerts/
+/.vscode/

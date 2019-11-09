@@ -7,10 +7,44 @@ import http, {Server as httpServer} from 'http'
 import https, {Server as httpsServer} from 'https'
 import {StateException} from '../utils/errors'
 import ws from 'ws'
+import {promises as fsp} from 'fs'
 
+type HttpsData = {
+    ca?: Buffer,
+    cert: Buffer | undefined,
+    key: Buffer | undefined,
+    https: boolean
+}
 
-function _redirectDashboard(req: express.Request|undefined, res: express.Response) : void{
+function redirectDashboard(req: express.Request|undefined, res: express.Response) : void{
     res.redirect('/dashboard')
+}
+
+function isHttpsConfigured(_serverConfig: ServerConfiguration): boolean{
+    return ('https' in _serverConfig) && !_.isEmpty(_serverConfig.https.cert) && !_.isEmpty(_serverConfig.https.key)
+}
+
+async function loadCertificates(_serverConfig: ServerConfiguration): Promise<HttpsData>{
+    let data:HttpsData = {cert: undefined, key: undefined, https: false}
+    if(!isHttpsConfigured(_serverConfig)){
+        return data
+    }
+
+    data.https = true
+
+    let certPromise = fsp.readFile(_serverConfig.https.cert)
+    let keyPromise = fsp.readFile(_serverConfig.https.key)
+    let caPromise: Promise<Buffer> = undefined
+    if(!_.isEmpty(_serverConfig.https.ca)){
+        caPromise =  fsp.readFile(_serverConfig.https.ca)
+    }
+    
+    data.cert = await certPromise
+    data.key = await keyPromise
+    if(caPromise !== undefined){
+        data.ca = await caPromise
+    }
+    return data
 }
 
 const FILE_MAPPINGS : {[key:string]: string} = {
@@ -83,21 +117,33 @@ export default class Server extends EventEmitter{
         this.emit('state', state)
     }
 
-    private _initializeExpress(){
+    private async _initializeExpress(){
+        let httpsData =  await loadCertificates(this._serverConfig)
+        
         this._expApp = (<expressWs.Application> <unknown>express())
-        this._server = http.createServer(this._expApp)
+        if(httpsData.https){
+            this._server = https.createServer({
+                ca: httpsData.ca,
+                key: httpsData.key,
+                cert: httpsData.cert
+            }, this._expApp)
+        }
+        else {
+            this._server = http.createServer(this._expApp)
+        }
         this._expWs = expressWs(this._expApp, this._server)
 
         for(const [route, file] of Object.entries(FILE_MAPPINGS)){
             this._expApp.get(route, (req: express.Request, res: express.Response) => res.sendFile(path.join(this._resourcePath, file)))
         }
+
         this._expApp.get('/audio', (req, res) => this._sendAudioStream(req, res))
         this._expApp.ws('/socket', (ws, req) => this.emit('client_connected', ws, req))
-
-        this._expApp.use(_redirectDashboard);
+        this._expApp.use(redirectDashboard);
+        
     }
 
-    private _initializeServer(){
+    private async _initializeServer(){
         switch(this._state){
             case ServerState.STARTED:
                 // Server is up. stop it and wait for the Stopped or Stopping state
@@ -111,9 +157,9 @@ export default class Server extends EventEmitter{
                 // The Server is in the process of starting or stopping. 
                 // Either way we have to wait until the process finished to do something like stopping it
                 this.once('state', () => this._initializeServer())
-                break;
+                break
             case ServerState.STOPPED:
-                this._initializeExpress()
+                await this._initializeExpress()
                 if(this._restarting){
                     this._restarting = false
                     this.startServer(this._port)
@@ -142,7 +188,7 @@ export default class Server extends EventEmitter{
      * 
      * @throws StateException if the server is already open
      */
-    public startServer(port: number = 8880) : void{
+    public startServer(port: number = 8880){
         if(this.state !== ServerState.STOPPED){
             throw new StateException('Server already open')
         }
