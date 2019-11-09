@@ -7,6 +7,11 @@ import JSON5 from 'json5'
 import CHECK_CONFIG from './checkConfigObject'
 import { timingSafeEqual } from 'crypto'
 
+const JSON5_CONFIG_JSON5 = {
+    space: 2,
+    quotes: '\''
+}
+
 export class ConfigHandler extends EventEmitter {
 
     private _path: string
@@ -53,7 +58,7 @@ export class ConfigHandler extends EventEmitter {
         this.emit('update_config', this._configBuffer, configObject)
         this._configBuffer = configObject
         this._fallback = false
-        fs.writeFile(this._path, JSON5.stringify(configObject), { encoding: 'utf8' }, this._handleWriteError.bind(this))
+        fs.writeFile(this._path, JSON5.stringify(configObject, JSON5_CONFIG_JSON5), { encoding: 'utf8' }, this._handleWriteError.bind(this))
     }
 
     public loadConfig() : void{
@@ -89,7 +94,7 @@ export class ConfigHandler extends EventEmitter {
         const result = checkType(CHECK_CONFIG, config)
         if(result.ok){
             this._configBuffer = result.resultObj
-            fs.writeFile(this._path, JSON5.stringify(result.resultObj), { encoding: 'utf8' }, this._handleWriteError.bind(this))
+            fs.writeFile(this._path, JSON5.stringify(result.resultObj, JSON5_CONFIG_JSON5), { encoding: 'utf8' }, this._handleWriteError.bind(this))
         }
         return result
     }
