@@ -2,7 +2,7 @@
     <div>
         <b-modal :visible="!loggedon"  title="Login required" @hide="cancelEvent" @ok="submit" ok-only>
             <b-form @submit="submitForm">
-                <b-form-group label="Admin passoword" :label-for="scoped('input-password')">
+                <b-form-group label="Admin password" :label-for="scoped('input-password')">
                     <input :id="scoped('input-password')" v-model="password" type="password" class="form-control"/>
                 </b-form-group>
             </b-form>
