@@ -10,6 +10,7 @@ export default function attachHandler(manager:ClientManager, config: ConfigHandl
 export function handleCommand(manager:ClientManager, config:ConfigHandler, con:FrontendConnection, cmd:string, ...args:any[]) : void{
 
     if(!con.authenticated && cmd !== 'login'){
+        con.sendCommand('login_required')
         return
     }
 
@@ -35,6 +36,11 @@ export function handleCommand(manager:ClientManager, config:ConfigHandler, con:F
                 else {
                     con.sendCommand('login_wrong')
                 }
+            }
+            break
+        case 'logout':
+            if(args.length === 0 && !_.isEmpty(config.configuration['server']['dashboard_sha256'])){
+                con.authenticated = false
             }
             break
         default:

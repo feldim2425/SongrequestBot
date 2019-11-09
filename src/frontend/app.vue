@@ -1,20 +1,10 @@
 <template>
     <div>
-        <Navbar @settings-open="$bvModal.show('settings-modal')"/>
+        <Navbar @settings-open="$bvModal.show('settings-modal')" @logout="logoutUser"/>
         <StatusPanel/>
-        <div>
-            <b-modal id="connection-modal" title="Connection lost" @close="cancelEvent" @cancel="cancelEvent" @ok="cancelEvent" @hide="cancelEvent">
-                <template v-slot:default="{ hide }">
-                    <p>Connection to backend lost!
-                    Please check if the backend is running and try again!</p>
-                </template>
-
-                <template v-slot:modal-footer>
-                    <b-button @click="retry">Retry</b-button>
-                </template>
-            </b-modal>
-        </div>
-        <Settings :connection="connection" modalId="settings-modal" @settings-close="showSettings = false"/>
+        <LoginPanel :loggedon="loggedin" @login="submitLogin"/>
+        <ConnectionPanel :connected="connected" @retry="retry"/>
+        <Settings :connection="connection" modalId="settings-modal"/>
     </div>
 </template>
 
@@ -24,55 +14,58 @@ import { Component, Watch, Prop} from 'vue-property-decorator'
 import Navbar from './components/navbar.vue'
 import StatusPanel from './screens/status.vue'
 import Settings from './screens/settings.vue'
+import ConnectionPanel from './screens/conlost.vue'
+import LoginPanel from './screens/login.vue'
+import BackendConnection from './remote/websocket'
 
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
-import BackendConnection from './remote/websocket'
+
+
+const CONNECTION_EVENTS = ['connected', 'closed', 'loggedin', 'loggedout']
 
 @Component({
     name: 'App',
-    components: {Navbar, StatusPanel, Settings}
+    components: {Navbar, StatusPanel, Settings, ConnectionPanel, LoginPanel}
 })
 export default class App extends Vue {
 
     @Prop()
     public connection: BackendConnection
     public connected: boolean = false
+    public loggedin: boolean = false
 
-    public showSettings: boolean = false
+    private boundUpdate = this.updateConnection.bind(this)
 
-    private boundConnect = this.setConnection.bind(this, true)
-    private boundDisconnect = this.setConnection.bind(this, false)
 
     public mounted(){
-        this.connection.on('connected', this.boundConnect)
-        this.connection.on('closed', this.boundDisconnect)
+        for(const ev of CONNECTION_EVENTS){
+            this.connection.on(ev, this.boundUpdate)
+        }
+        this.updateConnection()
     }
 
     public destroyed(){
-        this.connection.off('connected', this.boundConnect)
-        this.connection.off('closed',  this.boundDisconnect)
+        for(const ev of CONNECTION_EVENTS){
+            this.connection.off(ev, this.boundUpdate)
+        }
     }
 
-    public setConnection(value: boolean){
-        this.connected = value
-        if(value){
-            this.$bvModal.hide('connection-modal')
-        }
-        else {
-            this.$bvModal.show('connection-modal')
-        }
+    public logoutUser(){
+        this.connection.sendCommand('logout')
+    }
+
+    public updateConnection(){
+        this.connected = this.connection.open
+        this.loggedin = this.connection.loggedin || !this.connected  
+    }
+
+    public submitLogin(pwd: string){
+        this.connection.submitLogin(pwd)
     }
 
     public retry(){
         this.connection.connect()
-    }
-
-    public cancelEvent(event: any){
-        if(!this.connected){
-            this.retry()
-            event.preventDefault()
-        }
     }
 }
 

@@ -25,6 +25,15 @@ export function handleCommand(connection:BackendConnection, cmd:string, ...args:
                 store.dispatch('updateConfig', args[0])
             }
             break
+        case 'login_required':
+            connection.loggedin = false
+            break
+        case 'login_ok':
+            connection.loggedin = true
+            break
+        case 'login_wrong':
+            console.log('Wrong password')
+            break
         default:
             console.log(`Unknown command: ${cmd}`)
     }

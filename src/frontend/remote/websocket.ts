@@ -27,6 +27,7 @@ function _getUrl(endpoint: string) : string{
 export default class BackendConnection extends EventEmitter {
     
     private _socket?: WebSocket
+    private _loggedon: boolean = true
     
     public connect(): void{
         if(!this.open){
@@ -73,10 +74,30 @@ export default class BackendConnection extends EventEmitter {
         return !_.isNil(this._socket) && this._socket.readyState == WebSocket.OPEN
     }
 
+    public get loggedin(){
+        return this.open && this._loggedon
+    }
+
+    public set loggedin(value: boolean){
+        if(value !== this._loggedon){
+            this._loggedon = value
+            if(value){
+                this.emit('loggedin')
+            }
+            else {
+                this.emit('loggedout')
+            }
+        }
+    }
+
     public sendCommand(command: string, ...args:any[]){
         if(this.open){
             let msg = JSON.stringify({command, args})
             this._socket.send(msg)
         }
+    }
+
+    public submitLogin(pwd: string){
+        this.sendCommand('login', pwd)
     }
 }

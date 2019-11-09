@@ -1,7 +1,8 @@
 <template>
     <nav class='navigation'>
         <ul>
-                <li><b-button pill @click="$emit('settings-open')">Open Settings</b-button></li>
+                <li><b-button @click="$emit('settings-open')">Open Settings</b-button></li>
+                <li><b-button @click="$emit('logout')">Logout</b-button></li>
         </ul>
     </nav>
 </template>
@@ -39,13 +40,7 @@ export default class NavBar extends Vue{
 
         li {
             float: left;
-            a {
-                padding: 1em 1em;
-                display: block;
-                color: white;
-                text-align: center;
-                text-decoration: none;
-            }
+            margin-left: 4px
         }
     }
 </style>
