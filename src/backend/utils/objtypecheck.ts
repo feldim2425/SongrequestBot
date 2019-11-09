@@ -97,6 +97,10 @@ function hasSubDefaults(options: CheckOptions) : boolean{
     return false
 }
 
+function checkDefaultVal(option: TypeOption){
+    return option.hasOwnProperty('defaultVal') && option.defaultVal !== undefined
+}
+
 export function checkType(option: TypeOption, check: any, applyDefaults?: boolean) : CheckResult{
     return checkTypeRec(_.cloneDeep(option), _.cloneDeep(check), _.defaultTo(applyDefaults, true), '$')
 }
@@ -127,7 +131,6 @@ function checkTypeRec(option: TypeOption, check: any, applyDefaults: boolean, ob
     _.defaults(option, {
         subel: undefined,
         required: false,
-        defaultVal: undefined,
         deleteObsolete: true,
         checkfunction: () => true
     })
@@ -173,11 +176,12 @@ function checkTypeRec(option: TypeOption, check: any, applyDefaults: boolean, ob
             }
         }
         // Subel isn't set (therefor not an object) and defaultVal is defined
-        else if(_.isNil(option.subel) && option.defaultVal !== undefined){
+        else if(_.isNil(option.subel) && checkDefaultVal(option)){
             check = _.cloneDeep(option.defaultVal)
             appliedDefaults = true
         }
     }
+
 
     // check isn't defined (either because applying defaults is disabled or not set in the config) but it is required => error
     if(check === undefined && option.required){

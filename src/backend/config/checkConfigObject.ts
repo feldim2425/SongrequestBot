@@ -16,14 +16,13 @@ const CHECK_CONFIG : TypeOption = {
                 },
                 'https': {
                     subel: {
-                        'ca': {
-                            checkfunction: _.isString
-                        },
                         'cert': {
-                            checkfunction: _.isString
+                            checkfunction: (v) => _.isString(v) || _.isNull(v),
+                            defaultVal: null
                         },
                         'key': {
-                            checkfunction: _.isString
+                            checkfunction:(v) => _.isString(v) || _.isNull(v),
+                            defaultVal: null
                         },
                     }
                 }
