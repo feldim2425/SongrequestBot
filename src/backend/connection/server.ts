@@ -57,30 +57,18 @@ export enum ServerState {
  */
 export default class Server extends EventEmitter{
 
-    private _expApp: expressWs.Application
-    private _expWs: expressWs.Instance
+    private _expApp: expressWs.Application | undefined
+    private _expWs: expressWs.Instance | undefined
+    private _server?: httpServer | httpsServer | undefined
     private _resourcePath: string
-    private _server?: httpServer | httpsServer
     private _state: ServerState = ServerState.STOPPED
-    private _restarting: boolean
+    private _restarting: boolean = false
     private _port:number
     private _serverConfig: ServerConfiguration | undefined = undefined
     
     constructor(resourcePath: string){
         super()
-        this._expApp = (<expressWs.Application> <unknown>express())
-        //FIXME: Due to the way the server is initialized via the http module the express-ws module doesn't work. Rewrite to normal 'ws' module
-        this._expWs = expressWs(this._expApp)
         this._resourcePath = path.resolve(resourcePath)
-        this._restarting = false
-
-        for(const [route, file] of Object.entries(FILE_MAPPINGS)){
-            this._expApp.get(route, (req: express.Request, res: express.Response) => res.sendFile(path.join(this._resourcePath, file)))
-        }
-        this._expApp.get('/audio', (req, res) => this._sendAudioStream(req, res))
-        this._expApp.ws('/socket', (ws, req) => this.emit('client_connected', ws, req))
-
-        this._expApp.use(_redirectDashboard);
     }
 
     private _sendAudioStream(req: express.Request, res: express.Response){
@@ -93,6 +81,20 @@ export default class Server extends EventEmitter{
     private _setState(state: ServerState){
         this._state = state
         this.emit('state', state)
+    }
+
+    private _initializeExpress(){
+        this._expApp = (<expressWs.Application> <unknown>express())
+        this._server = http.createServer(this._expApp)
+        this._expWs = expressWs(this._expApp, this._server)
+
+        for(const [route, file] of Object.entries(FILE_MAPPINGS)){
+            this._expApp.get(route, (req: express.Request, res: express.Response) => res.sendFile(path.join(this._resourcePath, file)))
+        }
+        this._expApp.get('/audio', (req, res) => this._sendAudioStream(req, res))
+        this._expApp.ws('/socket', (ws, req) => this.emit('client_connected', ws, req))
+
+        this._expApp.use(_redirectDashboard);
     }
 
     private _initializeServer(){
@@ -111,7 +113,7 @@ export default class Server extends EventEmitter{
                 this.once('state', () => this._initializeServer())
                 break;
             case ServerState.STOPPED:
-                this._server = http.createServer(this._expApp)
+                this._initializeExpress()
                 if(this._restarting){
                     this._restarting = false
                     this.startServer(this._port)
