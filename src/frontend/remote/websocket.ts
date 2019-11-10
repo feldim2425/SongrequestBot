@@ -27,7 +27,7 @@ function _getUrl(endpoint: string) : string{
 export default class BackendConnection extends EventEmitter {
     
     private _socket?: WebSocket
-    private _loggedon: boolean = true
+    private _loggedon: boolean = false
     
     public connect(): void{
         if(!this.open){
