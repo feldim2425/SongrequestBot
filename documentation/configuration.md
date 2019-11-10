@@ -1,7 +1,7 @@
 # Configuration
 
 ## Server configuration
-```json
+```json5
 server: {
     /*
      * This option allows you to disable and enable https.
