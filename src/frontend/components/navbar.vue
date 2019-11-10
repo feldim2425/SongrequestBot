@@ -1,10 +1,17 @@
 <template>
-    <nav class='navigation'>
-        <ul>
-                <li><b-button @click="$emit('settings-open')">Open Settings</b-button></li>
-                <li><b-button @click="$emit('logout')">Logout</b-button></li>
-        </ul>
-    </nav>
+    <b-navbar  type="dark" variant="dark">
+        <b-navbar-brand>SongRequest-Bot</b-navbar-brand>
+        <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
+        <b-collapse id="nav-collapse" is-nav>
+            <b-nav-form class="mr-auto">
+                <b-button size="sm" class="mr-sm-2" @click="$emit('settings-open')">Open Settings</b-button>
+                <b-button size="sm" class="mr-sm-2" @click="$emit('logout')">Logout</b-button>
+            </b-nav-form>
+            <b-nav-form class="ml-auto">
+                <b-button size="sm" class="mr-sm-2" @click="$emit('message-open')">Messages</b-button>
+            </b-nav-form>
+        </b-collapse>
+    </b-navbar>
 </template>
 
 <script lang="ts">
@@ -20,27 +27,5 @@ export default class NavBar extends Vue{
 </script>
 
 <style lang="scss" scoped>
-    @import '../style/utils';
-
-    .navigation {
-        @include linear-gradient(to bottom, #273950 0%, #0c1015 50%, #273950 100%);
-        height: 50px;
-        margin: 0;
-        position: relative;
-
-        ul {
-            list-style-type: none;
-            padding: 1em;
-            margin: auto;
-            overflow: hidden;
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-
-        li {
-            float: left;
-            margin-left: 4px
-        }
-    }
+    
 </style>

@@ -1,6 +1,8 @@
 <template>
     <div>
-        <b-modal :visible="!connected" title="Connection lost" @hide="cancelEvent">
+        <b-modal :visible="!connected" title="Connection lost" @hide="cancelEvent"
+            body-bg-variant="dark" header-bg-variant="dark" footer-bg-variant="dark"
+            body-text-variant="light" header-text-variant="light" footer-text-variant="light">
             <template v-slot:default="{ hide }">
                 <p>Connection to backend lost!
                 Please check if the backend is running and try again!</p>

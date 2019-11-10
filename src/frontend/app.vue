@@ -1,9 +1,10 @@
 <template>
     <div>
-        <Navbar @settings-open="$bvModal.show('settings-modal')" @logout="logoutUser"/>
+        <Navbar @settings-open="$bvModal.show('settings-modal')" @message-open="$bvModal.show('info-modal')" @logout="logoutUser"/>
         <StatusPanel/>
         <LoginPanel :loggedon="loggedin" @login="submitLogin"/>
         <ConnectionPanel :connected="connected" @retry="retry"/>
+        <InfoPanel modalId="info-modal"/>
         <Settings :connection="connection" modalId="settings-modal"/>
     </div>
 </template>
@@ -16,6 +17,7 @@ import StatusPanel from './screens/status.vue'
 import Settings from './screens/settings.vue'
 import ConnectionPanel from './screens/conlost.vue'
 import LoginPanel from './screens/login.vue'
+import InfoPanel from './screens/infopanel.vue'
 import BackendConnection from './remote/websocket'
 
 import 'bootstrap/dist/css/bootstrap.css'
@@ -26,7 +28,7 @@ const CONNECTION_EVENTS = ['connected', 'closed', 'loggedin', 'loggedout']
 
 @Component({
     name: 'App',
-    components: {Navbar, StatusPanel, Settings, ConnectionPanel, LoginPanel}
+    components: {Navbar, StatusPanel, Settings, ConnectionPanel, LoginPanel, InfoPanel}
 })
 export default class App extends Vue {
 
