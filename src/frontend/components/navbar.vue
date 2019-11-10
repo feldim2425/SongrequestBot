@@ -8,7 +8,7 @@
                 <b-button size="sm" class="mr-sm-2" @click="$emit('logout')">Logout</b-button>
             </b-nav-form>
             <b-nav-form class="ml-auto">
-                <b-button size="sm" class="mr-sm-2" @click="$emit('message-open')">Messages</b-button>
+                <b-button size="sm" class="mr-sm-2" @click="$emit('message-open')">Messages: <b-badge pill variant="dark">{{$store.state.messages.length}}</b-badge></b-button>
             </b-nav-form>
         </b-collapse>
     </b-navbar>
