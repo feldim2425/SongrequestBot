@@ -3,18 +3,21 @@ import Vue from "vue"
 import Song, { Source } from './song'
 import uuidv4 from 'uuid/v4'
 import _ from 'lodash';
+import { Message } from './messages';
 
 Vue.use(Vuex);
 
 export type State = {
     songlist: Song[],
-    config: object
+    config: object,
+    messages: Message[]
 }
 
 const store = new Vuex.Store<State>({
     state: {
         songlist: [],
-        config: {}
+        config: {},
+        messages: []
     },
     actions: {
         addSongs(context: ActionContext<State,State>, songs: Song[]){
@@ -41,6 +44,42 @@ const store = new Vuex.Store<State>({
             if(!_.isEqual(changed, context.state.config)){
                 context.commit('setConfig', changed)
             }
+        },
+
+        addMessage(context: ActionContext<State,State>, msg: Message){
+            if(_.find(context.state.messages, (cmsg,index,arr) => cmsg.id.toLowerCase()===msg.id.toLowerCase()) === undefined){
+                const msgs = _.cloneDeep(context.state.messages)
+                msgs.push(msg)
+                context.commit('setMessages', msgs)
+            }
+        },
+
+        setMessages(context: ActionContext<State,State>, msg: Message[]){
+            if(!_.isEqual(context.state.messages, msg)){
+                context.commit('setMessages', _.uniqBy(_.cloneDeep(msg), (x) => x.id))
+            }
+        },
+
+        removeMessage(context: ActionContext<State,State>, msg: Message | string | number){
+            const msgs = _.cloneDeep(context.state.messages)
+
+            if(_.isObject(msg)){
+                msg = msg.id
+            }
+
+            if(_.isString(msg)){
+                msg = msg.toLowerCase()
+                const result = _.findIndex(msgs, (imsg, i, arr) => imsg.id.toLowerCase() === msg)
+                if(result === undefined){
+                    return
+                }
+                msg = result
+            }
+
+            if(_.isInteger(msg) && msg < msgs.length){
+                delete msgs[msg]
+                context.commit('setMessages', msgs)
+            }
         }
     },
     mutations: {
@@ -50,6 +89,10 @@ const store = new Vuex.Store<State>({
 
         setConfig(state:State, cfg: object): void {
             state.config = cfg
+        },
+
+        setMessages(state:State, messages: Message[]): void {
+            state.messages = messages
         }
     },
     getters: {},

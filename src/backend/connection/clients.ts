@@ -4,6 +4,7 @@ import { EventEmitter } from 'events'
 import _ from 'lodash'
 import { ConfigHandler } from '../config/config'
 import { OMIT_CLIENT_CONFIG } from '../constants'
+import uuid from 'uuid'
 
 /**
  * This Class is not stricly necessary, but it makes it more futureproof incase per client data becomes a thing we need.
@@ -108,6 +109,12 @@ export class ClientManager extends EventEmitter {
 
         con.on('login', () => {
             con.sendCommand('update_config', _.omit(this._config.configuration, OMIT_CLIENT_CONFIG))
+            con.sendCommand('sync_msgs',[
+                {id:uuid(), title:"Unknown", message:"This is a test", type: 0},
+                {id:uuid(), title:"Info", message:"This is a test", type: 1},
+                {id:uuid(), title:"Warning", message:"This is a test", type: 2},
+                {id:uuid(), title:"Error", message:"This is a test", type: 3}
+            ])
         })
 
         if(_.isEmpty(this._config.configuration['server']['dashboard_sha256'])){

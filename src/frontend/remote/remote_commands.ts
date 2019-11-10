@@ -25,6 +25,21 @@ export function handleCommand(connection:BackendConnection, cmd:string, ...args:
                 store.dispatch('updateConfig', args[0])
             }
             break
+        case 'sync_msgs':
+            if(args.length == 1 && _.isArray(args[0])){
+                store.dispatch('setMessages', args[0])
+            }
+            break
+        case 'add_msg':
+            if(args.length == 1 && _.isObject(args[0])){
+                store.dispatch('addMessage', args[0])
+            }
+            break
+        case 'rm_msg':
+            if(args.length == 1 && _.isString(args[0])){
+                store.dispatch('removeMessage', args[0])
+            }
+            break
         case 'login_required':
             connection.loggedin = false
             break
