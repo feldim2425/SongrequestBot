@@ -17,13 +17,13 @@ You can build and run the project but it is still Work In Progress
 
 ## Warning / Info for external hosting
 
-**DO NOT PUT THIS ON A PUBLIC ACCESSIBLE SERVER WITHOUT PUTTING ADDITIONAL SECURITY IN PLACE**
+**MAKE SURE YOU CONFIGURE THE SERVER CORRECTLY BEFORE YOU PUT THIS ON A PUBLIC SERVER**
 
-* This server has **NO SSL/TLS encryption** therefore all passwords and tokens are sent in clear text.
-* There is **NO authentication**, so everybody with the address can access the dashboard
+Per default:
+* The SSL/TLS aka. HTTPS/WSS Support is **DISABLED**. We can't just put out default certificates, so you have to make and configure them yourself
+* The default password is ``admin``. Please make sure you **CHANGE THE PASSWORD**
 
-If you want to put this on a external server, I recommend making it only accessible trough a VPN 
-or use a Apache / NginX - HTTP proxy that adds SSL/TLS encryption and at least basic http authentication
+Even with the builtin security I won't guarantee for security. If you deploying this system on a public server you do so at **YOUR OWN RISK**.
 
 ## Limitations
 
@@ -40,3 +40,7 @@ Specifically the [Spotify End-User-Agreement §9 "User guidelines"](https://www.
  * **(Point 7)** This is a bit more out for debate, but since this bot is intendet for streamers, playback trough the bot could be used to circumvent territorial restrictions.
 
  **WARNING: If you use the Spotify integration, you do so at your own risk. I'm not responsible for blocked spotify accounts or any legal actions taken against you** 
+
+
+ ## HOW-TO
+ Please checkout the documents in the ``documentation`` directory for more info.
