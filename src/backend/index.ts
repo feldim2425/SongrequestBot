@@ -5,6 +5,8 @@ import { ClientManager } from './connection/clients'
 import { ConfigHandler } from './config/config'
 import parseCliArguments from './utils/cli_args'
 import attachHandler from './connection/remote_commands'
+import ServiceManager from './services/service_manager'
+import TwitchService from './services/twitch'
 
 const args = parseCliArguments()
 
@@ -20,6 +22,10 @@ const clientHandler = new ClientManager(server, config);
 
 config.on('update_config', (old,n) => server.updateServerConfiguration(n.server))
 config.loadConfig()
+
+const serviceManager = new ServiceManager();
+config.on('update_config', (old,n) => serviceManager.updateConfiguration(n))
+serviceManager.registerService('twitch', new TwitchService())
 
 server.startServer();
 
