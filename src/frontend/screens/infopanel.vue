@@ -4,8 +4,8 @@
             body-bg-variant="dark" header-bg-variant="dark" footer-bg-variant="dark"
             body-text-variant="light" header-text-variant="light" footer-text-variant="light">
             <b-list-group>
-                <b-list-group-item v-for="message in this.$store.state.messages" :key="message.id" :variant="toVariant(message)">
-                    <h2>{{message.title}}</h2>
+                <b-list-group-item v-for="message in $store.state.messages" :key="message.id" :variant="toVariant(message)">
+                    <h2 class="card-title">{{message.title}}</h2>
                     {{message.message}}
                 </b-list-group-item>
             </b-list-group>
@@ -33,3 +33,11 @@ export default class InfoPanel extends Mixins(CustomScopeMixin) {
     }
 }
 </script>
+
+<style lang="scss" scoped>
+    .card-title {
+        font-size: 1.1em;
+        font-style: italic;
+        text-decoration: underline;
+    }
+</style>
