@@ -5,6 +5,7 @@ import _ from 'lodash'
 import { ConfigHandler } from '../config/config'
 import { OMIT_CLIENT_CONFIG } from '../constants'
 import uuid from 'uuid'
+import { Message } from '~common/remote/message'
 
 /**
  * This Class is not stricly necessary, but it makes it more futureproof incase per client data becomes a thing we need.
@@ -88,6 +89,7 @@ export class ClientManager extends EventEmitter {
     private _server: Server
     private _config: ConfigHandler
     private _frontend_cons: FrontendConnection[] = []
+    private _messages: Message[] = []
 
     constructor(server: Server, config: ConfigHandler){
         super()
@@ -109,12 +111,7 @@ export class ClientManager extends EventEmitter {
 
         con.on('login', () => {
             con.sendCommand('update_config', _.omit(this._config.configuration, OMIT_CLIENT_CONFIG))
-            con.sendCommand('sync_msgs',[
-                {id:uuid(), title:"Unknown", message:"This is a test", type: 0},
-                {id:uuid(), title:"Info", message:"This is a test", type: 1},
-                {id:uuid(), title:"Warning", message:"This is a test", type: 2},
-                {id:uuid(), title:"Error", message:"This is a test", type: 3}
-            ])
+            con.sendCommand('sync_msgs', this._messages)
         })
 
         if(_.isEmpty(this._config.configuration['server']['dashboard_sha256'])){
@@ -189,5 +186,25 @@ export class ClientManager extends EventEmitter {
                 con.socket.send(msg)
             }
         }
+    }
+
+    public putMessage(message:Message) : void{
+        if(_.find(this._messages, (imsg,index,arr) => imsg.id.toLowerCase()===message.id.toLowerCase()) === undefined){
+            this._messages.push(_.cloneDeep(message))
+            this.sendCommand('add_msg', message)
+        }
+    }
+
+    public removeMessage(messageId:string) : void{
+        const index = _.findIndex(this._messages, (imsg,index,arr) => imsg.id.toLowerCase()===messageId.toLowerCase())
+        if(index >= 0){
+            this.sendCommand('rm_msg', this._messages[index].id)
+            delete this._messages[index]
+            _.remove(this._messages, _.isNil)
+        }
+    }
+
+    public get messages(): Message[]{
+        return _.cloneDeep(this._messages)
     }
 }

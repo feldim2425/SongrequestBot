@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import { ClientManager } from '../connection/clients'
 import _ from 'lodash';
 
 
@@ -6,6 +7,8 @@ export interface AccountService {
 
     readonly enabled: boolean
     readonly loggedin: boolean
+
+    registered(manager: ServiceManager)
 
     configure(config: object)
 }
@@ -16,12 +19,18 @@ export default class ServiceManager {
 
     private _services: ServicesDict = {}
     private _config: object|undefined = undefined
+    private _clients: ClientManager;
+
+    constructor(clients: ClientManager){
+        this._clients = clients
+    }
 
     public registerService(name: string, service: AccountService): boolean{
         if(this._services.hasOwnProperty(name)){
             return false
         }
         this._services[name] = service
+        service.registered(this)
         if(!_.isNil(this._config)){
             service.configure(this._config)
         }
@@ -58,5 +67,9 @@ export default class ServiceManager {
             return this._services[name]
         }
         return undefined
+    }
+
+    public get clients(): ClientManager{
+        return this._clients
     }
 }

@@ -1,7 +1,8 @@
 import { EventEmitter } from 'events';
 import tmi from 'tmi.js'
-import { AccountService } from './service_manager';
+import ServiceManager, { AccountService } from './service_manager';
 import _ from 'lodash';
+import { MessageType } from '~common/remote/message';
 
 type TwitchConfig = {
     username: string,
@@ -11,9 +12,14 @@ type TwitchConfig = {
 
 export default class TwitchService extends EventEmitter implements AccountService {
 
+    private _manager: ServiceManager
     private _enabled: boolean = false;
     private _data: TwitchConfig = {username: undefined, oauth: undefined, channels: []}
     loggedin: boolean;
+
+    registered(manager: ServiceManager) {
+        this._manager = manager
+    }
 
     public configure(config: object) {
         let ndata: TwitchConfig = {
@@ -62,15 +68,24 @@ export default class TwitchService extends EventEmitter implements AccountServic
             },
             channels: this._data.channels
         });
+        this._manager.clients.removeMessage('service_twitch_error')
         this._tmi.on('connected', () => console.log(`Twitch service connected to [${this._data.channels.join(', ')}]`));
-        this._tmi.connect().catch((e)=> console.error(e))
+        this._tmi.connect().catch((e)=> {
+            this._manager.clients.putMessage({
+                id:'service_twitch_error',
+                title: 'Twitch connection failed',
+                message: `${e}`,
+                type: MessageType.ERROR
+            })
+        })
     }
 
     public disconnect(): void{
+        this._manager.clients.removeMessage('service_twitch_error')
         if(this._tmi === undefined){
             return
         }
-        this._tmi.disconnect()
+        this._tmi.disconnect().then(_.noop, _.noop)
     }
 
     public get enabled(): boolean{

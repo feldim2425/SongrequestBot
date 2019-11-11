@@ -2,6 +2,7 @@ import BackendConnection from './websocket';
 import store from './vuex_store';
 import { songsFromCmdObjects } from './song';
 import _ from 'lodash';
+import { verifyMessages } from './messages';
 
 export default function attachHandler(connection:BackendConnection): void{
     connection.on('command', (cmd, args) => handleCommand(connection, cmd, ...args))
@@ -27,12 +28,15 @@ export function handleCommand(connection:BackendConnection, cmd:string, ...args:
             break
         case 'sync_msgs':
             if(args.length == 1 && _.isArray(args[0])){
-                store.dispatch('setMessages', args[0])
+                store.dispatch('setMessages', verifyMessages(...args[0]))
             }
             break
         case 'add_msg':
             if(args.length == 1 && _.isObject(args[0])){
-                store.dispatch('addMessage', args[0])
+                const messages = verifyMessages(args[0])
+                if(messages.length >= 1){
+                    store.dispatch('addMessage', messages[0])
+                }
             }
             break
         case 'rm_msg':

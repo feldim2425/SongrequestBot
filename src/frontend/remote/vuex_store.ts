@@ -56,7 +56,7 @@ const store = new Vuex.Store<State>({
 
         setMessages(context: ActionContext<State,State>, msg: Message[]){
             if(!_.isEqual(context.state.messages, msg)){
-                context.commit('setMessages', _.uniqBy(_.cloneDeep(msg), (x) => x.id))
+                context.commit('setMessages', _.uniqBy(_.cloneDeep(msg), 'id'))
             }
         },
 
@@ -76,9 +76,10 @@ const store = new Vuex.Store<State>({
                 msg = result
             }
 
-            if(_.isInteger(msg) && msg < msgs.length){
+            if(_.isInteger(msg) && msg >= 0 && msg < msgs.length){
                 delete msgs[msg]
-                context.commit('setMessages', msgs)
+                _.remove(msgs, _.isNil)
+                context.commit('setMessages',msgs)
             }
         }
     },
