@@ -17,8 +17,9 @@
 import Vue from 'vue'
 import _ from 'lodash'
 import { Component, Prop, Watch, Mixins } from "vue-property-decorator";
-import CustomScopeMixin from '../mixins/custom_scope_mixin';
-import {messageTypeToBootstrapVariant, Message} from '../remote/messages';
+import CustomScopeMixin from '../mixins/custom_scope_mixin'
+import {messageTypeToBootstrapVariant} from '../remote/messages'
+import {Message} from '~common/remote/message'
 
 @Component({
     name: 'info-panel'

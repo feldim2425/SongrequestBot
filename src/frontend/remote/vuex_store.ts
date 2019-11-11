@@ -3,7 +3,7 @@ import Vue from "vue"
 import Song, { Source } from './song'
 import uuidv4 from 'uuid/v4'
 import _ from 'lodash';
-import { Message } from './messages';
+import { Message } from '~common/remote/message';
 
 Vue.use(Vuex);
 

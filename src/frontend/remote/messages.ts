@@ -1,18 +1,6 @@
-
-
-export type Message = {
-    id: string,
-    title: string,
-    message: string,
-    type: MessageType
-}
-
-export enum MessageType {
-    UNKNOWN = 0,
-    INFO = 1,
-    WARNING = 2,
-    ERROR = 3,
-}
+import {TypeOption, checkType} from '~common/utils/objtypecheck'
+import _ from 'lodash'
+import { MessageType, Message } from '~common/remote/message'
 
 export function messageTypeToBootstrapVariant(type: MessageType): string{
     switch(type){
@@ -25,4 +13,39 @@ export function messageTypeToBootstrapVariant(type: MessageType): string{
         default:
             return "secondary"
     }
+}
+
+const OBJ_CKECK_MESSAGE :TypeOption = {
+    subel: {
+        'id': {
+            required: true,
+            checkfunction: _.isString
+        },
+        'title': {
+            required: true,
+            checkfunction: _.isString
+        },
+        'message': {
+            required: true,
+            checkfunction: _.isString
+        },
+        'type': {
+            checkfunction: (x) => Object.values(MessageType).includes(x),
+            defaultVal: MessageType.UNKNOWN
+        }
+    }
+}
+
+export function verifyMessages(...messageObj: object[]): Message[]{
+    let messages: Message[] = []
+    for(const obj of messageObj){
+        const result = checkType(OBJ_CKECK_MESSAGE, obj)
+        if(result.ok){
+            messages.push(result.resultObj)
+        }
+        else {
+            console.warn(`Message parsing failed: ${result.error.message}`)
+        }
+    }
+    return messages
 }
