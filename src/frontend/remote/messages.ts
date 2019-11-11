@@ -49,3 +49,29 @@ export function verifyMessages(...messageObj: object[]): Message[]{
     }
     return messages
 }
+
+export function getMessageTypePriority(type: MessageType): MessageType{
+    switch(type){
+        case MessageType.INFO:
+            return 1
+        case MessageType.WARNING:
+            return 2
+        case MessageType.ERROR:
+            return 3
+        default:
+            return 0
+    }
+}
+
+export function getMostImportantType(messages: Message[]): MessageType | undefined{
+    let type: MessageType|undefined = undefined
+    let weight = -1;
+    for(const msg of messages){
+        const nweight = getMessageTypePriority(msg.type)
+        if(nweight > weight){
+            weight = nweight
+            type = msg.type
+        }
+    }
+    return type
+}
