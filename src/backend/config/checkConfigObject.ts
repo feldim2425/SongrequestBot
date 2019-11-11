@@ -1,4 +1,4 @@
-import {TypeOption } from "../utils/objtypecheck";
+import {TypeOption } from "~common/utils/objtypecheck";
 import _ from 'lodash';
 import { DEFAULT_ECDH_CURVE } from 'tls';
 

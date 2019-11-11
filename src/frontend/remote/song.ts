@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import mapArguments, { ArgMapOptions } from '../utils/argarray'
+import mapArguments, { ArgMapOptions } from '~common/utils/argarray'
 
 export enum Source {
     YOUTUBE = 'yt',
